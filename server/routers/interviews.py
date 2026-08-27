@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, HTTPException, Query, status
 from pydantic import BaseModel
 
 router = APIRouter(prefix="/interviews", tags=["interviews"])
@@ -67,8 +67,8 @@ def add_interviews(new_interviews: list[InterviewCreate]):
     return [create_interview(interview) for interview in new_interviews]
 
 
-@router.get("/{interview_id}")
-def get_interview(interview_id: int):
+@router.get("/get")
+def get_interview(interview_id: int = Query(gt=0)):
     interview = interviews.get(interview_id)
     if interview is None:
         raise HTTPException(status_code=404, detail="Interview not found")

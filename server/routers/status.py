@@ -3,7 +3,7 @@ from fastapi import APIRouter
 router = APIRouter(prefix="/statuses", tags=["statuses"])
 
 
-@router.get("")
+@router.get("/all")
 def get_statuses():
     return [
         "APPLIED",

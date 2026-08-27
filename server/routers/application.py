@@ -1,6 +1,6 @@
 from datetime import date
 
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, HTTPException, Query, status
 from pydantic import BaseModel
 
 router = APIRouter(prefix="/applications", tags=["applications"])
@@ -77,8 +77,8 @@ def add_applications(new_applications: list[ApplicationCreate]):
     return [create_application(application) for application in new_applications]
 
 
-@router.get("/{application_id}")
-def get_application(application_id: int):
+@router.get("/get")
+def get_application(application_id: int = Query(gt=0)):
     application = applications.get(application_id)
     if application is None:
         raise HTTPException(status_code=404, detail="Application not found")

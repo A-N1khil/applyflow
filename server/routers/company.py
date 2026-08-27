@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, HTTPException, Query, status
 from pydantic import BaseModel
 
 router = APIRouter(prefix="/companies", tags=["companies"])
@@ -60,8 +60,8 @@ def add_companies(new_companies: list[CompanyCreate]):
     return [create_company(company) for company in new_companies]
 
 
-@router.get("/{company_id}")
-def get_company(company_id: int):
+@router.get("/get")
+def get_company(company_id: int = Query(gt=0)):
     company = companies.get(company_id)
     if company is None:
         raise HTTPException(status_code=404, detail="Company not found")
