@@ -1,16 +1,8 @@
-from datetime import datetime
-
 from fastapi import APIRouter, HTTPException, Query, status
-from pydantic import BaseModel
+
+from server.models.interviews import InterviewCreate
 
 router = APIRouter(prefix="/interviews", tags=["interviews"])
-
-
-class InterviewCreate(BaseModel):
-    application_id: int
-    interview_type: str
-    scheduled_at: datetime
-    notes: str
 
 
 interviews: dict[int, dict] = {

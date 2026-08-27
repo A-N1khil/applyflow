@@ -1,13 +1,8 @@
 from fastapi import APIRouter, HTTPException, Query, status
-from pydantic import BaseModel
+
+from server.models.company import CompanyCreate
 
 router = APIRouter(prefix="/companies", tags=["companies"])
-
-
-class CompanyCreate(BaseModel):
-    name: str
-    website: str
-    industry: str
 
 
 companies: dict[int, dict] = {

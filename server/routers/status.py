@@ -1,17 +1,10 @@
 from fastapi import APIRouter
 
+from server.models.application import ApplicationStatus
+
 router = APIRouter(prefix="/statuses", tags=["statuses"])
 
 
 @router.get("/all")
 def get_statuses():
-    return [
-        "APPLIED",
-        "RECRUITER_CONTACT",
-        "ASSESSMENT",
-        "INTERVIEW",
-        "FINAL_INTERVIEW",
-        "OFFER",
-        "REJECTED",
-        "WITHDRAWN",
-    ]
+    return [application_status.value for application_status in ApplicationStatus]
