@@ -25,6 +25,7 @@ import {
   LayoutDashboardIcon,
   MessageSquareTextIcon,
   SettingsIcon,
+  UserRoundIcon,
 } from "lucide-react"
 
 const data = {
@@ -107,6 +108,11 @@ const data = {
     },
   ],
   navSecondary: [
+    {
+      title: "Profile",
+      url: "/user",
+      icon: <UserRoundIcon />,
+    },
     {
       title: "Settings",
       url: "/settings",
