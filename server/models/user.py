@@ -1,23 +1,13 @@
-from uuid import UUID
+from uuid import UUID, uuid4
 
-from pydantic import BaseModel
+from sqlalchemy import String, Uuid, select
+from sqlalchemy.orm import Mapped, Session, mapped_column
 
+from server.core.database import Base
+class UserModel(Base):
+    __tablename__ = "users"
 
-class User(BaseModel):
-    id: UUID
-    firstname: str
-    lastname: str
-    location: str
-
-
-class UserCreate(BaseModel):
-    firstname: str
-    lastname: str
-    location: str
-
-
-class UserUpdate(BaseModel):
-    id: UUID
-    firstname: str | None = None
-    lastname: str | None = None
-    location: str | None = None
+    id: Mapped[UUID] = mapped_column(Uuid, primary_key=True, default=uuid4)
+    firstname: Mapped[str] = mapped_column(String(100))
+    lastname: Mapped[str] = mapped_column(String(100))
+    location: Mapped[str] = mapped_column(String(255))

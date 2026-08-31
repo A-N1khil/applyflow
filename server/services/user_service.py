@@ -2,7 +2,7 @@ from uuid import UUID, uuid4
 
 from fastapi import HTTPException, status
 
-from server.models.user import User, UserCreate, UserUpdate
+from server.schemas.user_schema import User, UserCreate, UserUpdate
 
 
 class UserService:

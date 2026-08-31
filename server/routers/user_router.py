@@ -4,7 +4,7 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, status
 
 from server.dependencies.user_dependency import get_user_service
-from server.models.user import User, UserCreate, UserUpdate
+from server.schemas.user_schema import User, UserCreate, UserUpdate
 from server.services.user_service import UserService
 
 router = APIRouter(prefix="/users", tags=["users"])
@@ -46,3 +46,14 @@ def get_user(
     user_service: UserServiceDependency,
 ) -> User:
     return user_service.get_user(user_id)
+
+
+@router.get(
+    "/all",
+    response_model=list[User],
+    status_code=status.HTTP_200_OK,
+)
+def get_all_users(
+    user_service: UserServiceDependency,
+) -> list[User]:
+    return list(user_service._users.values())
