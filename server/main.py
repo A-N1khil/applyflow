@@ -1,14 +1,20 @@
 from fastapi import FastAPI
 
-from server.routers import application, company, interviews, status, user
+from server.routers import (
+    application_router,
+    company_router,
+    interviews_router,
+    status_router,
+    user_router,
+)
 
 app = FastAPI()
 
-app.include_router(application.router)
-app.include_router(company.router)
-app.include_router(status.router)
-app.include_router(interviews.router)
-app.include_router(user.router)
+app.include_router(application_router.router)
+app.include_router(company_router.router)
+app.include_router(status_router.router)
+app.include_router(interviews_router.router)
+app.include_router(user_router.router)
 
 
 @app.get("/")

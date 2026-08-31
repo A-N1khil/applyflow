@@ -33,6 +33,3 @@ class UserService:
                 detail="User not found",
             )
         return user
-
-
-user_service: UserService = UserService()

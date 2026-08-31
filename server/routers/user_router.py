@@ -1,11 +1,15 @@
+from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter, status
+from fastapi import APIRouter, Depends, status
 
+from server.dependencies.user_dependency import get_user_service
 from server.models.user import User, UserCreate, UserUpdate
-from server.services.user import user_service
+from server.services.user_service import UserService
 
 router = APIRouter(prefix="/users", tags=["users"])
+
+UserServiceDependency = Annotated[UserService, Depends(get_user_service)]
 
 
 @router.post(
@@ -13,7 +17,10 @@ router = APIRouter(prefix="/users", tags=["users"])
     response_model=User,
     status_code=status.HTTP_201_CREATED,
 )
-def create_user(user_create: UserCreate) -> User:
+def create_user(
+    user_create: UserCreate,
+    user_service: UserServiceDependency,
+) -> User:
     return user_service.create_user(user_create)
 
 
@@ -22,7 +29,10 @@ def create_user(user_create: UserCreate) -> User:
     response_model=User,
     status_code=status.HTTP_200_OK,
 )
-def update_user(user_update: UserUpdate) -> User:
+def update_user(
+    user_update: UserUpdate,
+    user_service: UserServiceDependency,
+) -> User:
     return user_service.update_user(user_update)
 
 
@@ -31,5 +41,8 @@ def update_user(user_update: UserUpdate) -> User:
     response_model=User,
     status_code=status.HTTP_200_OK,
 )
-def get_user(user_id: UUID) -> User:
+def get_user(
+    user_id: UUID,
+    user_service: UserServiceDependency,
+) -> User:
     return user_service.get_user(user_id)
