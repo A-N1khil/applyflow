@@ -1,5 +1,6 @@
 from typing import Generic, TypeVar
 
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
 from server.core.database import Base
@@ -17,11 +18,19 @@ class BaseDBService(Generic[DatabaseModel]):
         self.database_session = database_session
 
     def add(self, database_model: DatabaseModel) -> DatabaseModel:
-        self.database_session.add(database_model)
-        self.database_session.commit()
-        self.database_session.refresh(database_model)
+        try:
+            self.database_session.add(database_model)
+            self.database_session.commit()
+            self.database_session.refresh(database_model)
+        except SQLAlchemyError:
+            self.database_session.rollback()
+            raise
         return database_model
 
     def delete(self, database_model: DatabaseModel) -> None:
-        self.database_session.delete(database_model)
-        self.database_session.commit()
+        try:
+            self.database_session.delete(database_model)
+            self.database_session.commit()
+        except SQLAlchemyError:
+            self.database_session.rollback()
+            raise

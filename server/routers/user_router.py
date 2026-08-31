@@ -13,7 +13,7 @@ UserServiceDependency = Annotated[UserService, Depends(get_user_service)]
 
 
 @router.post(
-    "/post",
+    "",
     response_model=User,
     status_code=status.HTTP_201_CREATED,
 )
@@ -25,19 +25,43 @@ def create_user(
 
 
 @router.patch(
-    "/update",
+    "/{user_id}",
     response_model=User,
     status_code=status.HTTP_200_OK,
 )
 def update_user(
+    user_id: UUID,
     user_update: UserUpdate,
     user_service: UserServiceDependency,
 ) -> User:
-    return user_service.update_user(user_update)
+    return user_service.update_user(user_id, user_update)
 
 
 @router.get(
-    "/get/{user_id}",
+    "",
+    response_model=list[User],
+    status_code=status.HTTP_200_OK,
+)
+def get_all_users(
+    user_service: UserServiceDependency,
+) -> list[User]:
+    return user_service.get_all_users()
+
+
+@router.get(
+    "/by-first-name/{first_name}",
+    response_model=list[User],
+    status_code=status.HTTP_200_OK,
+)
+def get_users_by_first_name(
+    first_name: str,
+    user_service: UserServiceDependency,
+) -> list[User]:
+    return user_service.get_users_by_first_name(first_name)
+
+
+@router.get(
+    "/{user_id}",
     response_model=User,
     status_code=status.HTTP_200_OK,
 )
@@ -48,12 +72,25 @@ def get_user(
     return user_service.get_user(user_id)
 
 
+@router.delete(
+    "/{user_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+)
+def delete_user(
+    user_id: UUID,
+    user_service: UserServiceDependency,
+) -> None:
+    user_service.delete_user(user_id)
+
+
 @router.get(
-    "/all",
-    response_model=list[User],
+    "/email-exists",
+    response_model=bool,
     status_code=status.HTTP_200_OK,
 )
-def get_all_users(
+def check_if_email_exists(
+    email: str,
     user_service: UserServiceDependency,
-) -> list[User]:
-    return list(user_service._users.values())
+) -> bool:
+    users = user_service.get_users_by_email(email)
+    return len(users) > 0
