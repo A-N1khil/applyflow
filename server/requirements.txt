@@ -1,0 +1,6 @@
+fastapi==0.141.1
+pydantic==2.13.5
+pydantic-settings==2.6.1
+psycopg[binary]==3.3.4
+sqlalchemy==2.0.34
+server==0.0.0
