@@ -9,6 +9,7 @@ CORE_DIRECTORY = Path(__file__).resolve().parent
 
 class Settings(BaseSettings):
     database_url: str
+    client_url: str = "http://localhost:3000"
 
     model_config = SettingsConfigDict(
         env_file=CORE_DIRECTORY / ".env",

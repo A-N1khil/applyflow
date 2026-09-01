@@ -11,9 +11,11 @@ import {
   FieldSeparator,
 } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
+import { userService } from "@/services/user-service"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { Form } from "lucide-react"
 import Link from "next/link"
+import { useEffect, useRef, useState } from "react"
 import { useForm, useWatch } from "react-hook-form"
 import { z } from "zod"
 
@@ -35,6 +37,13 @@ type SignupFormProps = React.ComponentProps<"div"> & {
 }
 
 export function SignupForm({ className, onSignup, ...props }: SignupFormProps) {
+  const [emailValidation, setEmailValidation] = useState<{
+    email: string
+    isAvailable: boolean
+    message: string | null
+  } | null>(null)
+  const emailCheckSequence = useRef(0)
+
   const {
     control,
     register,
@@ -49,7 +58,58 @@ export function SignupForm({ className, onSignup, ...props }: SignupFormProps) {
   })
 
   const email = useWatch({ control, name: "email" })
-  const canCreateAccount = email.length >= 5 && isValid && !isSubmitting
+  const hasValidEmailFormat =
+    email.length >= 5 && emailFormat.safeParse(email).success
+  const currentEmailValidation =
+    emailValidation?.email === email ? emailValidation : null
+  const isCheckingEmail = hasValidEmailFormat && currentEmailValidation === null
+  const isEmailAvailable = currentEmailValidation?.isAvailable === true
+  const emailAvailabilityError = currentEmailValidation?.message ?? null
+  const canCreateAccount =
+    hasValidEmailFormat &&
+    isValid &&
+    isEmailAvailable &&
+    !isCheckingEmail &&
+    !isSubmitting
+
+  useEffect(() => {
+    const requestSequence = ++emailCheckSequence.current
+
+    if (!hasValidEmailFormat) {
+      return
+    }
+
+    const validationTimer = window.setTimeout(async () => {
+      try {
+        const emailExists = await userService.emailExists(email)
+
+        if (requestSequence !== emailCheckSequence.current) {
+          return
+        }
+
+        setEmailValidation({
+          email,
+          isAvailable: !emailExists,
+          message: emailExists
+            ? "An account with this email already exists"
+            : null,
+        })
+      } catch (error: unknown) {
+        if (requestSequence !== emailCheckSequence.current) {
+          return
+        }
+
+        setEmailValidation({
+          email,
+          isAvailable: false,
+          message:
+            error instanceof Error ? error.message : "Unable to verify email",
+        })
+      }
+    }, 300)
+
+    return () => window.clearTimeout(validationTimer)
+  }, [email, hasValidEmailFormat])
 
   function submitSignup(values: SignupFormValues) {
     onSignup(values.email)
@@ -74,17 +134,29 @@ export function SignupForm({ className, onSignup, ...props }: SignupFormProps) {
               Already have an account? <Link href="/login">Sign in</Link>
             </FieldDescription>
           </div>
-          <Field data-invalid={Boolean(errors.email)}>
+          <Field data-invalid={Boolean(errors.email || emailAvailabilityError)}>
             <FieldLabel htmlFor="email">Email</FieldLabel>
             <Input
               id="email"
               type="email"
               placeholder="m@example.com"
               autoComplete="email"
-              aria-invalid={Boolean(errors.email)}
+              aria-invalid={Boolean(errors.email || emailAvailabilityError)}
               {...register("email")}
             />
-            <FieldError errors={[errors.email]} />
+            {isCheckingEmail && (
+              <FieldDescription>
+                Checking email availability...
+              </FieldDescription>
+            )}
+            <FieldError
+              errors={[
+                errors.email,
+                emailAvailabilityError
+                  ? { message: emailAvailabilityError }
+                  : undefined,
+              ]}
+            />
           </Field>
           <Field>
             <Button type="submit" disabled={!canCreateAccount}>

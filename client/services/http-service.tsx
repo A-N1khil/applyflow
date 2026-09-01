@@ -4,9 +4,13 @@ export class HttpService {
   public readonly baseUrl: string
 
   constructor(
-    baseUrl: string = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000"
+    baseUrl: string = process.env.APPLYFLOW_SERVER_URL ??
+      "http://localhost:8000"
   ) {
     this.baseUrl = baseUrl.replace(/\/$/, "")
+    console.log(
+      `HttpService initialized with base URL: ${process.env.APPLYFLOW_SERVER_URL}`
+    )
   }
 
   get<T>(path: string): Promise<DataHolder<T>> {
