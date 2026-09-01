@@ -7,7 +7,7 @@ from pwdlib.hashers.argon2 import Argon2Hasher
 
 from server.db.user_db_service import UserDBService
 from server.models.user_model import UserModel
-from server.schemas.user_schema import User, UserCreate, UserUpdate
+from server.schemas.user_schema import User, UserCreate, UserUpdate, UserLoginRequest
 
 
 class UserService:
@@ -76,3 +76,20 @@ class UserService:
     def get_users_by_email(self, email: str) -> list[str]:
         users = self.user_db_service.get_users_by_email(email)
         return [user.email for user in users]
+
+    def user_login(self, user_login_request: UserLoginRequest) -> User:
+        user = self.user_db_service.get_users_by_email(user_login_request.email)
+        if not user:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid email or password",
+            )
+        user_model = user[0]
+        if not self.hasher.verify(
+            user_login_request.password, user_model.password_hash
+        ):
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid email or password",
+            )
+        return User.model_validate(user_model)
