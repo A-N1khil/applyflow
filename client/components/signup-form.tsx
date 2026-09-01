@@ -5,33 +5,59 @@ import { Button } from "@/components/ui/button"
 import {
   Field,
   FieldDescription,
+  FieldError,
   FieldGroup,
   FieldLabel,
   FieldSeparator,
 } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
+import { zodResolver } from "@hookform/resolvers/zod"
 import { Form } from "lucide-react"
 import Link from "next/link"
+import { useForm, useWatch } from "react-hook-form"
+import { z } from "zod"
+
+const emailFormat = z.email("Enter a valid email address")
+
+const signupSchema = z.object({
+  email: z
+    .string()
+    .refine(
+      (email) => email.length < 5 || emailFormat.safeParse(email).success,
+      { message: "Enter a valid email address" }
+    ),
+})
+
+type SignupFormValues = z.infer<typeof signupSchema>
 
 type SignupFormProps = React.ComponentProps<"div"> & {
   onSignup: (email: string) => void
 }
 
 export function SignupForm({ className, onSignup, ...props }: SignupFormProps) {
-  function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault()
+  const {
+    control,
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting, isValid },
+  } = useForm<SignupFormValues>({
+    resolver: zodResolver(signupSchema),
+    mode: "onChange",
+    defaultValues: {
+      email: "",
+    },
+  })
 
-    const formData = new FormData(event.currentTarget)
-    const email = formData.get("email")
+  const email = useWatch({ control, name: "email" })
+  const canCreateAccount = email.length >= 5 && isValid && !isSubmitting
 
-    if (typeof email === "string") {
-      onSignup(email)
-    }
+  function submitSignup(values: SignupFormValues) {
+    onSignup(values.email)
   }
 
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
-      <form onSubmit={handleSubmit}>
+      <form onSubmit={handleSubmit(submitSignup)} noValidate>
         <FieldGroup>
           <div className="flex flex-col items-center gap-2 text-center">
             <a
@@ -48,18 +74,22 @@ export function SignupForm({ className, onSignup, ...props }: SignupFormProps) {
               Already have an account? <Link href="/login">Sign in</Link>
             </FieldDescription>
           </div>
-          <Field>
+          <Field data-invalid={Boolean(errors.email)}>
             <FieldLabel htmlFor="email">Email</FieldLabel>
             <Input
               id="email"
-              name="email"
               type="email"
               placeholder="m@example.com"
-              required
+              autoComplete="email"
+              aria-invalid={Boolean(errors.email)}
+              {...register("email")}
             />
+            <FieldError errors={[errors.email]} />
           </Field>
           <Field>
-            <Button type="submit">Create Account</Button>
+            <Button type="submit" disabled={!canCreateAccount}>
+              Create Account
+            </Button>
           </Field>
           <FieldSeparator>Or</FieldSeparator>
           <Field className="grid gap-4 sm:grid-cols-2">
