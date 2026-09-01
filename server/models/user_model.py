@@ -18,6 +18,7 @@ class UserModel(Base):
     email: Mapped[str] = mapped_column(String(255), unique=True)
     first_name: Mapped[str] = mapped_column(String(100))
     last_name: Mapped[str] = mapped_column(String(100))
+    password_hash: Mapped[str] = mapped_column(String(255))
     created_at: Mapped[datetime | None] = mapped_column(
         DateTime,
         nullable=True,

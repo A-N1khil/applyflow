@@ -4,7 +4,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from server.db.base_db_service import BaseDBService
-from server.models.user import UserModel
+from server.models.user_model import UserModel
 
 
 class UserDBService(BaseDBService[UserModel]):

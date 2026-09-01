@@ -2,18 +2,25 @@ from uuid import UUID
 
 from fastapi import HTTPException, status
 from sqlalchemy.exc import IntegrityError
+from pwdlib import PasswordHash
+from pwdlib.hashers.argon2 import Argon2Hasher
 
 from server.db.user_db_service import UserDBService
-from server.models.user import UserModel
+from server.models.user_model import UserModel
 from server.schemas.user_schema import User, UserCreate, UserUpdate
 
 
 class UserService:
     def __init__(self, user_db_service: UserDBService) -> None:
         self.user_db_service = user_db_service
+        self.hasher: PasswordHash = PasswordHash((Argon2Hasher(),))
 
     def create_user(self, user_create: UserCreate) -> User:
-        user_model = UserModel(**user_create.model_dump())
+        user_hashed_pwd: str = self.hasher.hash(user_create.password)
+        user_model = UserModel(
+            **user_create.model_dump(exclude={"password"}),
+            password_hash=user_hashed_pwd
+        )
         try:
             created_user = self.user_db_service.add(user_model)
         except IntegrityError as error:

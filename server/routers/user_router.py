@@ -14,7 +14,7 @@ UserServiceDependency = Annotated[UserService, Depends(get_user_service)]
 
 
 @router.post(
-    "",
+    "/add",
     response_model=None,
     status_code=status.HTTP_201_CREATED,
 )
@@ -27,7 +27,7 @@ def create_user(
 
 
 @router.patch(
-    "/{user_id}",
+    "/update/{user_id}",
     response_model=None,
     status_code=status.HTTP_200_OK,
 )
@@ -41,7 +41,7 @@ def update_user(
 
 
 @router.get(
-    "",
+    "/all",
     response_model=None,
     status_code=status.HTTP_200_OK,
 )
@@ -79,7 +79,7 @@ def check_if_email_exists(
 
 
 @router.get(
-    "/{user_id}",
+    "/user/{user_id}",
     response_model=None,
     status_code=status.HTTP_200_OK,
 )
@@ -92,7 +92,7 @@ def get_user(
 
 
 @router.delete(
-    "/{user_id}",
+    "/delete/{user_id}",
     response_model=None,
     status_code=status.HTTP_200_OK,
 )
