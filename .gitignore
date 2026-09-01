@@ -4,3 +4,6 @@ AGENTS.md
 
 
 **/.DS_Store
+
+# Local server configuration
+server/core/.env
