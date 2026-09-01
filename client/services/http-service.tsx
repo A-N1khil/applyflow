@@ -1,10 +1,5 @@
 import type { DataHolder } from "@/models/data-holder"
 
-interface ApiErrorBody {
-  detail?: unknown
-  message?: unknown
-}
-
 export class HttpService {
   public readonly baseUrl: string
 
@@ -46,8 +41,10 @@ export class HttpService {
     path: string,
     options: RequestInit
   ): Promise<DataHolder<T>> {
+    let response: Response
+
     try {
-      const response = await fetch(this.buildUrl(path), {
+      response = await fetch(this.buildUrl(path), {
         ...options,
         headers: {
           Accept: "application/json",
@@ -55,29 +52,15 @@ export class HttpService {
           ...options.headers,
         },
       })
-      const responseBody = await this.parseResponse(response)
-
-      if (!response.ok) {
-        return {
-          data: null,
-          status: response.status,
-          messages: this.getErrorMessage(responseBody, response.statusText),
-        }
-      }
-
-      return {
-        data: responseBody as T | null,
-        status: response.status,
-        messages: null,
-      }
     } catch (error: unknown) {
-      return {
-        data: null,
-        status: 0,
-        messages:
-          error instanceof Error ? error.message : "Unable to reach the server",
-      }
+      const message =
+        error instanceof Error ? error.message : "Unable to reach the server"
+      throw new Error(`Unable to reach the server: ${message}`, {
+        cause: error,
+      })
     }
+
+    return this.parseDataHolder<T>(response)
   }
 
   private buildUrl(path: string): string {
@@ -85,48 +68,36 @@ export class HttpService {
     return `${this.baseUrl}${normalizedPath}`
   }
 
-  private async parseResponse(response: Response): Promise<unknown> {
+  private async parseDataHolder<T>(response: Response): Promise<DataHolder<T>> {
     if (response.status === 204) {
-      return null
+      throw new Error("The server returned no DataHolder response")
     }
 
     const contentType = response.headers.get("content-type")
-    if (contentType?.includes("application/json")) {
-      return response.json()
+    if (!contentType?.includes("application/json")) {
+      throw new Error("The server returned a non-JSON response")
     }
 
-    const responseText = await response.text()
-    return responseText || null
+    const responseBody: unknown = await response.json()
+
+    if (!this.isDataHolder<T>(responseBody)) {
+      throw new Error("The server returned an invalid DataHolder response")
+    }
+
+    return responseBody
   }
 
-  private getErrorMessage(body: unknown, fallbackMessage: string): string {
-    if (typeof body === "string") {
-      return body
+  private isDataHolder<T>(value: unknown): value is DataHolder<T> {
+    if (!value || typeof value !== "object") {
+      return false
     }
 
-    if (body && typeof body === "object") {
-      const errorBody = body as ApiErrorBody
-
-      if (typeof errorBody.detail === "string") {
-        return errorBody.detail
-      }
-
-      if (Array.isArray(errorBody.detail)) {
-        return errorBody.detail
-          .map((detail) =>
-            detail && typeof detail === "object" && "msg" in detail
-              ? String(detail.msg)
-              : String(detail)
-          )
-          .join(", ")
-      }
-
-      if (typeof errorBody.message === "string") {
-        return errorBody.message
-      }
-    }
-
-    return fallbackMessage || "The request failed"
+    const candidate = value as Record<string, unknown>
+    return (
+      "data" in candidate &&
+      typeof candidate.status_code === "number" &&
+      (typeof candidate.message === "string" || candidate.message === null)
+    )
   }
 }
 
