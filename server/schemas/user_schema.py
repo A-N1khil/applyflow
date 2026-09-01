@@ -16,6 +16,7 @@ class User(BaseModel):
 
 class UserCreate(BaseModel):
     email: str = Field(min_length=1, max_length=255)
+    password: str = Field(min_length=1, max_length=255)
     first_name: str = Field(min_length=1, max_length=100)
     last_name: str = Field(min_length=1, max_length=100)
 
@@ -24,3 +25,12 @@ class UserUpdate(BaseModel):
     email: str | None = Field(default=None, min_length=1, max_length=255)
     first_name: str | None = Field(default=None, min_length=1, max_length=100)
     last_name: str | None = Field(default=None, min_length=1, max_length=100)
+
+
+class UserLoginRequest(BaseModel):
+    email: str = Field(min_length=1, max_length=255)
+    password: str = Field(min_length=1, max_length=255)
+
+
+class UserByIdRequest(BaseModel):
+    user_id: UUID

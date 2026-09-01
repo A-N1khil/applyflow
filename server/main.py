@@ -1,5 +1,8 @@
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
+from server.core.config import settings
+from server.core.exception_handlers import register_exception_handlers
 from server.routers import (
     application_router,
     company_router,
@@ -9,6 +12,15 @@ from server.routers import (
 )
 
 app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[settings.client_url],
+    allow_methods=["GET", "POST", "PATCH", "DELETE"],
+    allow_headers=["Accept", "Content-Type"],
+)
+
+register_exception_handlers(app)
 
 app.include_router(application_router.router)
 app.include_router(company_router.router)

@@ -4,7 +4,13 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, status
 
 from server.dependencies.user_dependency import get_user_service
-from server.schemas.user_schema import User, UserCreate, UserUpdate
+from server.routers.base_router import DataHolder, success_response
+from server.schemas.user_schema import (
+    UserCreate,
+    UserUpdate,
+    UserByIdRequest,
+    UserLoginRequest,
+)
 from server.services.user_service import UserService
 
 router = APIRouter(prefix="/users", tags=["users"])
@@ -13,84 +19,105 @@ UserServiceDependency = Annotated[UserService, Depends(get_user_service)]
 
 
 @router.post(
-    "",
-    response_model=User,
+    "/add",
+    response_model=None,
     status_code=status.HTTP_201_CREATED,
 )
 def create_user(
     user_create: UserCreate,
     user_service: UserServiceDependency,
-) -> User:
-    return user_service.create_user(user_create)
+) -> DataHolder:
+    user = user_service.create_user(user_create)
+    return success_response(user, status_code=status.HTTP_201_CREATED)
 
 
 @router.patch(
-    "/{user_id}",
-    response_model=User,
+    "/update/{user_id}",
+    response_model=None,
     status_code=status.HTTP_200_OK,
 )
 def update_user(
     user_id: UUID,
     user_update: UserUpdate,
     user_service: UserServiceDependency,
-) -> User:
-    return user_service.update_user(user_id, user_update)
+) -> DataHolder:
+    user = user_service.update_user(user_id, user_update)
+    return success_response(user)
 
 
 @router.get(
-    "",
-    response_model=list[User],
+    "/all",
+    response_model=None,
     status_code=status.HTTP_200_OK,
 )
 def get_all_users(
     user_service: UserServiceDependency,
-) -> list[User]:
-    return user_service.get_all_users()
+) -> DataHolder:
+    users = user_service.get_all_users()
+    return success_response(users)
 
 
 @router.get(
     "/by-first-name/{first_name}",
-    response_model=list[User],
+    response_model=None,
     status_code=status.HTTP_200_OK,
 )
 def get_users_by_first_name(
     first_name: str,
     user_service: UserServiceDependency,
-) -> list[User]:
-    return user_service.get_users_by_first_name(first_name)
-
-
-@router.get(
-    "/{user_id}",
-    response_model=User,
-    status_code=status.HTTP_200_OK,
-)
-def get_user(
-    user_id: UUID,
-    user_service: UserServiceDependency,
-) -> User:
-    return user_service.get_user(user_id)
-
-
-@router.delete(
-    "/{user_id}",
-    status_code=status.HTTP_204_NO_CONTENT,
-)
-def delete_user(
-    user_id: UUID,
-    user_service: UserServiceDependency,
-) -> None:
-    user_service.delete_user(user_id)
+) -> DataHolder:
+    users = user_service.get_users_by_first_name(first_name)
+    return success_response(users)
 
 
 @router.get(
     "/email-exists",
-    response_model=bool,
+    response_model=None,
     status_code=status.HTTP_200_OK,
 )
 def check_if_email_exists(
     email: str,
     user_service: UserServiceDependency,
-) -> bool:
+) -> DataHolder:
     users = user_service.get_users_by_email(email)
-    return len(users) > 0
+    return success_response(len(users) > 0)
+
+
+@router.post(
+    "/getUserById",
+    response_model=None,
+    status_code=status.HTTP_200_OK,
+)
+def get_user(
+    user_id: UserByIdRequest,
+    user_service: UserServiceDependency,
+) -> DataHolder:
+    user = user_service.get_user(user_id.user_id)
+    return success_response(user)
+
+
+@router.delete(
+    "/delete",
+    response_model=None,
+    status_code=status.HTTP_200_OK,
+)
+def delete_user(
+    user_id: UserByIdRequest,
+    user_service: UserServiceDependency,
+) -> DataHolder:
+    user_service.delete_user(user_id.user_id)
+    return success_response(None, message="User deleted successfully")
+
+
+@router.post(
+    "/login",
+    response_model=None,
+    status_code=status.HTTP_200_OK,
+)
+def login(
+    user_login: UserLoginRequest,
+    user_service: UserServiceDependency,
+) -> DataHolder:
+    return success_response(
+        user_service.user_login(user_login), message="Login successful"
+    )
