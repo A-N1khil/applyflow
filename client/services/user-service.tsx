@@ -1,6 +1,24 @@
+import type { User, UserCreate } from "@/models/user"
 import { httpService } from "@/services/http-service"
 
 export class UserService {
+  async createUser(userCreate: UserCreate): Promise<User> {
+    const response = await httpService.post<User, UserCreate>(
+      "/users/add",
+      userCreate
+    )
+
+    if (response.status_code < 200 || response.status_code >= 300) {
+      throw new Error(response.message ?? "Unable to create account")
+    }
+
+    if (response.data === null) {
+      throw new Error("The server did not return the created user")
+    }
+
+    return response.data
+  }
+
   async emailExists(email: string): Promise<boolean> {
     const response = await httpService.get<boolean>(
       `/users/email-exists?email=${encodeURIComponent(email)}`

@@ -16,6 +16,9 @@ import {
   FieldLabel,
 } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
+import { Toaster, toast } from "@/components/ui/toast"
+import type { UserCreate } from "@/models/user"
+import { userService } from "@/services/user-service"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { Check, X } from "lucide-react"
 import { useForm, useWatch } from "react-hook-form"
@@ -89,134 +92,174 @@ export function SignupDetailedForm({
   const passwordsMatch =
     confirmPassword.length > 0 && password === confirmPassword
 
+  async function submitSignupDetails(values: SignupDetailedFormValues) {
+    const userCreate: UserCreate = {
+      email,
+      password: values.password,
+      first_name: values.firstName.trim(),
+      last_name: values.lastName.trim(),
+    }
+
+    const createUserPromise = new Promise<void>((resolve) => {
+      window.setTimeout(resolve, 3000)
+    }).then(() => userService.createUser(userCreate))
+
+    try {
+      await toast.promise(createUserPromise, {
+        loading: {
+          title: "Creating your account..",
+          type: "loading",
+          timeout: 0,
+        },
+        success: {
+          title: "Account created successfully",
+          type: "success",
+          timeout: 5000,
+        },
+        error: (error: unknown) => ({
+          title: "Unable to create account",
+          description:
+            error instanceof Error ? error.message : "Please try again",
+          type: "error",
+          timeout: 5000,
+          priority: "high",
+        }),
+      })
+    } catch {
+      // The promise toast displays the server or network error.
+    }
+  }
+
   return (
-    <Card {...props}>
-      <CardHeader>
-        <CardTitle>Create an account</CardTitle>
-        <CardDescription>
-          Enter your information below to create your account
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <form onSubmit={handleSubmit(() => undefined)} noValidate>
-          <FieldGroup>
-            <div className="grid gap-4 sm:grid-cols-2">
-              <Field data-invalid={Boolean(errors.firstName)}>
-                <FieldLabel htmlFor="first-name">First Name</FieldLabel>
-                <Input
-                  id="first-name"
-                  type="text"
-                  placeholder="John"
-                  autoComplete="given-name"
-                  aria-invalid={Boolean(errors.firstName)}
-                  {...register("firstName")}
-                />
-                <FieldError errors={[errors.firstName]} />
-              </Field>
-              <Field data-invalid={Boolean(errors.lastName)}>
-                <FieldLabel htmlFor="last-name">Last Name</FieldLabel>
-                <Input
-                  id="last-name"
-                  type="text"
-                  placeholder="Doe"
-                  autoComplete="family-name"
-                  aria-invalid={Boolean(errors.lastName)}
-                  {...register("lastName")}
-                />
-                <FieldError errors={[errors.lastName]} />
-              </Field>
-            </div>
-            <Field>
-              <FieldLabel htmlFor="email">Email</FieldLabel>
-              <Input
-                id="email"
-                name="email"
-                type="email"
-                value={email}
-                disabled
-                readOnly
-              />
-              <FieldDescription>
-                We&apos;ll use this to contact you. We will not share your email
-                with anyone else.
-              </FieldDescription>
-            </Field>
-            <Field data-invalid={Boolean(errors.password)}>
-              <FieldLabel htmlFor="password">Password</FieldLabel>
-              <Input
-                id="password"
-                type="password"
-                autoComplete="new-password"
-                aria-invalid={Boolean(errors.password)}
-                {...register("password")}
-              />
-              {password.length > 0 && (
-                <ul className="space-y-1 text-sm" aria-label="Password rules">
-                  {passwordRules.map((rule) => (
-                    <li
-                      key={rule.label}
-                      className={
-                        rule.passed ? "text-green-600" : "text-destructive"
-                      }
-                    >
-                      {rule.passed ? (
-                        <Check className="inline size-4" aria-hidden="true" />
-                      ) : (
-                        <X className="inline size-4" aria-hidden="true" />
-                      )}{" "}
-                      {rule.label}
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </Field>
-            <Field data-invalid={Boolean(errors.confirmPassword)}>
-              <FieldLabel htmlFor="confirm-password">
-                Confirm Password
-              </FieldLabel>
-              <Input
-                id="confirm-password"
-                type="password"
-                autoComplete="new-password"
-                aria-invalid={Boolean(errors.confirmPassword)}
-                {...register("confirmPassword")}
-              />
-              {confirmPassword.length > 0 && (
-                <p
-                  className={
-                    passwordsMatch
-                      ? "text-sm text-green-600"
-                      : "text-sm text-destructive"
-                  }
-                  role="status"
-                >
-                  {passwordsMatch ? (
-                    <Check className="inline size-4" aria-hidden="true" />
-                  ) : (
-                    <X className="inline size-4" aria-hidden="true" />
-                  )}{" "}
-                  {passwordsMatch
-                    ? "Passwords match"
-                    : "Passwords do not match"}
-                </p>
-              )}
-            </Field>
+    <Toaster>
+      <Card {...props}>
+        <CardHeader>
+          <CardTitle>Create an account</CardTitle>
+          <CardDescription>
+            Enter your information below to create your account
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleSubmit(submitSignupDetails)} noValidate>
             <FieldGroup>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <Field data-invalid={Boolean(errors.firstName)}>
+                  <FieldLabel htmlFor="first-name">First Name</FieldLabel>
+                  <Input
+                    id="first-name"
+                    type="text"
+                    placeholder="John"
+                    autoComplete="given-name"
+                    aria-invalid={Boolean(errors.firstName)}
+                    {...register("firstName")}
+                  />
+                  <FieldError errors={[errors.firstName]} />
+                </Field>
+                <Field data-invalid={Boolean(errors.lastName)}>
+                  <FieldLabel htmlFor="last-name">Last Name</FieldLabel>
+                  <Input
+                    id="last-name"
+                    type="text"
+                    placeholder="Doe"
+                    autoComplete="family-name"
+                    aria-invalid={Boolean(errors.lastName)}
+                    {...register("lastName")}
+                  />
+                  <FieldError errors={[errors.lastName]} />
+                </Field>
+              </div>
               <Field>
-                <Button type="submit" disabled={!isValid || isSubmitting}>
-                  Create Account
-                </Button>
-                <Button variant="outline" type="button">
-                  Sign up with Google
-                </Button>
-                <FieldDescription className="px-6 text-center">
-                  Already have an account? <a href="#">Sign in</a>
+                <FieldLabel htmlFor="email">Email</FieldLabel>
+                <Input
+                  id="email"
+                  name="email"
+                  type="email"
+                  value={email}
+                  disabled
+                  readOnly
+                />
+                <FieldDescription>
+                  We&apos;ll use this to contact you. We will not share your
+                  email with anyone else.
                 </FieldDescription>
               </Field>
+              <Field data-invalid={Boolean(errors.password)}>
+                <FieldLabel htmlFor="password">Password</FieldLabel>
+                <Input
+                  id="password"
+                  type="password"
+                  autoComplete="new-password"
+                  aria-invalid={Boolean(errors.password)}
+                  {...register("password")}
+                />
+                {password.length > 0 && (
+                  <ul className="space-y-1 text-sm" aria-label="Password rules">
+                    {passwordRules.map((rule) => (
+                      <li
+                        key={rule.label}
+                        className={
+                          rule.passed ? "text-green-600" : "text-destructive"
+                        }
+                      >
+                        {rule.passed ? (
+                          <Check className="inline size-4" aria-hidden="true" />
+                        ) : (
+                          <X className="inline size-4" aria-hidden="true" />
+                        )}{" "}
+                        {rule.label}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </Field>
+              <Field data-invalid={Boolean(errors.confirmPassword)}>
+                <FieldLabel htmlFor="confirm-password">
+                  Confirm Password
+                </FieldLabel>
+                <Input
+                  id="confirm-password"
+                  type="password"
+                  autoComplete="new-password"
+                  aria-invalid={Boolean(errors.confirmPassword)}
+                  {...register("confirmPassword")}
+                />
+                {confirmPassword.length > 0 && (
+                  <p
+                    className={
+                      passwordsMatch
+                        ? "text-sm text-green-600"
+                        : "text-sm text-destructive"
+                    }
+                    role="status"
+                  >
+                    {passwordsMatch ? (
+                      <Check className="inline size-4" aria-hidden="true" />
+                    ) : (
+                      <X className="inline size-4" aria-hidden="true" />
+                    )}{" "}
+                    {passwordsMatch
+                      ? "Passwords match"
+                      : "Passwords do not match"}
+                  </p>
+                )}
+              </Field>
+              <FieldGroup>
+                <Field>
+                  <Button type="submit" disabled={!isValid || isSubmitting}>
+                    Create Account
+                  </Button>
+                  <Button variant="outline" type="button">
+                    Sign up with Google
+                  </Button>
+                  <FieldDescription className="px-6 text-center">
+                    Already have an account? <a href="#">Sign in</a>
+                  </FieldDescription>
+                </Field>
+              </FieldGroup>
             </FieldGroup>
-          </FieldGroup>
-        </form>
-      </CardContent>
-    </Card>
+          </form>
+        </CardContent>
+      </Card>
+    </Toaster>
   )
 }

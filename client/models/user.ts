@@ -1,19 +1,20 @@
 export interface User {
   id: string
-  firstname: string
-  lastname: string
-  location: string
+  email: string
+  first_name: string
+  last_name: string
+  created_at: string | null
 }
 
 export interface UserCreate {
-  firstname: string
-  lastname: string
-  location: string
+  email: string
+  password: string
+  first_name: string
+  last_name: string
 }
 
 export interface UserUpdate {
-  id: string
-  firstname?: string
-  lastname?: string
-  location?: string
+  email?: string
+  first_name?: string
+  last_name?: string
 }
