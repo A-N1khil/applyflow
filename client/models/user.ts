@@ -13,6 +13,11 @@ export interface UserCreate {
   last_name: string
 }
 
+export interface UserLoginRequest {
+  email: string
+  password: string
+}
+
 export interface UserUpdate {
   email?: string
   first_name?: string
