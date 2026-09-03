@@ -1,7 +1,24 @@
-import type { User, UserCreate } from "@/models/user"
+import type { User, UserCreate, UserLoginRequest } from "@/models/user"
 import { httpService } from "@/services/http-service"
 
 export class UserService {
+  async login(userLogin: UserLoginRequest): Promise<User> {
+    const response = await httpService.post<User, UserLoginRequest>(
+      "/users/login",
+      userLogin
+    )
+
+    if (response.status_code < 200 || response.status_code >= 300) {
+      throw new Error(response.message ?? "Unable to log in")
+    }
+
+    if (response.data === null) {
+      throw new Error("The server did not return the logged-in user")
+    }
+
+    return response.data
+  }
+
   async createUser(userCreate: UserCreate): Promise<User> {
     const response = await httpService.post<User, UserCreate>(
       "/users/add",

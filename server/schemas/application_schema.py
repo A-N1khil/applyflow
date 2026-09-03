@@ -1,8 +1,8 @@
 from enum import StrEnum
-from uuid import UUID
 from datetime import datetime
+from uuid import UUID
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class ApplicationStatus(StrEnum):
@@ -17,28 +17,33 @@ class ApplicationStatus(StrEnum):
 
 
 class Application(BaseModel):
-    app_id: UUID
+    model_config = ConfigDict(from_attributes=True)
+
+    application_id: UUID
     user_id: UUID
     company_id: UUID
     role: str
     url: str | None = None
-    location: str = "Remote"
+    location: str | None = "Remote"
     status: ApplicationStatus = ApplicationStatus.APPLIED
-    created_at: datetime | None = None
+    created_at: datetime
+    applied_on: datetime
 
 
 class ApplicationCreate(BaseModel):
     user_id: UUID
     company_id: UUID
-    role: str
+    role: str = Field(min_length=1, max_length=255)
     url: str | None = None
-    location: str = "Remote"
+    location: str = Field(default="Remote", min_length=1, max_length=255)
     status: ApplicationStatus = ApplicationStatus.APPLIED
 
 
 class ApplicationUpdate(BaseModel):
+    application_id: UUID
     user_id: UUID
     company_id: UUID | None = None
-    role: str | None = None
-    location: str | None = None
+    role: str | None = Field(default=None, min_length=1, max_length=255)
+    location: str | None = Field(default=None, min_length=1, max_length=255)
     url: str | None = None
+    status: ApplicationStatus | None = None

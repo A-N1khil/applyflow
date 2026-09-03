@@ -1,7 +1,8 @@
-import { Geist, Geist_Mono, Oxanium, Instrument_Sans } from "next/font/google"
+import { Geist_Mono, Oxanium, Instrument_Sans } from "next/font/google"
 
 import "./globals.css"
 import { ThemeProvider } from "@/components/theme-provider"
+import { UserProvider } from "@/contexts/user-context"
 import { cn } from "@/lib/utils"
 import { TooltipProvider } from "@/components/ui/tooltip"
 
@@ -36,7 +37,9 @@ export default function RootLayout({
     >
       <body>
         <ThemeProvider>
-          <TooltipProvider>{children}</TooltipProvider>
+          <UserProvider>
+            <TooltipProvider>{children}</TooltipProvider>
+          </UserProvider>
         </ThemeProvider>
       </body>
     </html>
