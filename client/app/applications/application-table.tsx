@@ -38,15 +38,15 @@ const statusIconMap: Record<string, TablerIcon> = {
   WITHDRAWN: IconCircleXFilled,
 }
 
-const statusIconColorMap: Record<string, string> = {
-  APPLIED: "!text-yellow-500 dark:!text-yellow-400",
-  RECRUITER_CONTACT: "!text-blue-500 dark:!text-blue-400",
-  ASSESSMENT: "!text-indigo-500 dark:!text-indigo-400",
-  INTERVIEW: "!text-orange-500 dark:!text-orange-400",
-  FINAL_INTERVIEW: "!text-orange-600 dark:!text-orange-500",
-  OFFER: "!text-green-500 dark:!text-green-400",
-  REJECTED: "!text-red-500 dark:!text-red-400",
-  WITHDRAWN: "!text-gray-500 dark:!text-gray-400",
+const statusColorMap: Record<string, string> = {
+  APPLIED: "!text-yellow-600 dark:!text-yellow-400",
+  RECRUITER_CONTACT: "!text-blue-600 dark:!text-blue-400",
+  ASSESSMENT: "!text-indigo-600 dark:!text-indigo-400",
+  INTERVIEW: "!text-orange-600 dark:!text-orange-400",
+  FINAL_INTERVIEW: "!text-orange-600 dark:!text-orange-400",
+  OFFER: "!text-green-600 dark:!text-green-400",
+  REJECTED: "!text-red-600 dark:!text-red-400",
+  WITHDRAWN: "!text-gray-600 dark:!text-gray-400",
 }
 
 const applicationStatuses = Object.keys(statusIconMap)
@@ -71,7 +71,7 @@ function formatAppliedOn(appliedOn: string): string {
 function StatusOption({ status }: { status: string }) {
   const StatusIcon = statusIconMap[status] ?? IconProgress
   const iconColor =
-    statusIconColorMap[status] ?? "!text-gray-500 dark:!text-gray-400"
+    statusColorMap[status] ?? "!text-gray-600 dark:!text-gray-400"
 
   return (
     <span className="flex items-center gap-1.5 text-foreground">
