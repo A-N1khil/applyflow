@@ -89,6 +89,13 @@ function getColumns(
 ): DataTableColumn<ApplicationTableRow>[] {
   return [
     {
+      id: "application-index",
+      header: null,
+      cell: (application) => application.application_index,
+      headerClassName: "w-12",
+      cellClassName: "w-12 text-muted-foreground",
+    },
+    {
       id: "company",
       header: "Company",
       cell: (application) => application.company,
@@ -171,7 +178,13 @@ export default function ApplicationsTable() {
     Promise.all([applicationService.getApplications(user.id), skeletonDelay])
       .then(([rows]) => {
         if (!ignoreResponse) {
-          setApplications(rows)
+          setApplications(
+            [...rows].sort(
+              (firstApplication, secondApplication) =>
+                firstApplication.application_index -
+                secondApplication.application_index
+            )
+          )
           setApplicationError(null)
         }
       })

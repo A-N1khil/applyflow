@@ -1,7 +1,16 @@
 from datetime import datetime
 from uuid import UUID
 
-from sqlalchemy import DateTime, Enum, ForeignKey, String, Text, Uuid, text
+from sqlalchemy import (
+    DateTime,
+    Enum,
+    ForeignKey,
+    Integer,
+    String,
+    Text,
+    Uuid,
+    text,
+)
 from sqlalchemy.orm import Mapped, mapped_column
 
 from server.core.database import Base
@@ -16,6 +25,7 @@ class ApplicationModel(Base):
         primary_key=True,
         server_default=text("gen_random_uuid()"),
     )
+    application_index: Mapped[int] = mapped_column(Integer)
     user_id: Mapped[UUID] = mapped_column(Uuid, ForeignKey("users.id"))
     company_id: Mapped[UUID] = mapped_column(
         Uuid,

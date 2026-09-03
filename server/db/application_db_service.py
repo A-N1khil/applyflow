@@ -1,6 +1,6 @@
 from uuid import UUID
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from server.db.base_db_service import BaseDBService
@@ -47,5 +47,11 @@ class ApplicationDBService(BaseDBService[ApplicationModel]):
     def get_all_applications(self, user_id: UUID) -> list[ApplicationModel]:
         statement = select(ApplicationModel).where(
             ApplicationModel.user_id == user_id
-        )
+        ).order_by(ApplicationModel.application_index)
         return list(self.database_session.scalars(statement).all())
+
+    def get_next_application_index(self, user_id: UUID) -> int:
+        statement = select(
+            func.coalesce(func.max(ApplicationModel.application_index), 0) + 1
+        ).where(ApplicationModel.user_id == user_id)
+        return int(self.database_session.scalar(statement))

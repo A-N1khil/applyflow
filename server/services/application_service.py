@@ -18,8 +18,12 @@ class ApplicationService:
     def create_application(
         self, user_id: UUID, application_create: ApplicationCreate
     ) -> Application:
+        application_index = (
+            self.application_db_service.get_next_application_index(user_id)
+        )
         application_model = ApplicationModel(
             user_id=user_id,
+            application_index=application_index,
             **application_create.model_dump(exclude={"user_id"}),
         )
         created_application = self.application_db_service.create_application(
