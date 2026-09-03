@@ -27,6 +27,7 @@ class Application(BaseModel):
     location: str | None = "Remote"
     status: ApplicationStatus = ApplicationStatus.APPLIED
     created_at: datetime
+    applied_on: datetime
 
 
 class ApplicationCreate(BaseModel):

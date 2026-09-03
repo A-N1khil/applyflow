@@ -33,3 +33,6 @@ class ApplicationModel(Base):
         Enum(ApplicationStatus, name="application_status"),
         server_default=text("'APPLIED'::application_status"),
     )
+    applied_on: Mapped[datetime] = mapped_column(
+        DateTime, server_default=text("CURRENT_TIMESTAMP")
+    )

@@ -29,12 +29,13 @@ def create_application(
 
 
 @router.patch(
-    "/update/{application_id}",
+    "/update",
     response_model=None,
     status_code=status.HTTP_200_OK,
 )
 def update_application(
     application_id: UUID,
+    user_id: UUID,
     application_update: ApplicationUpdate,
     application_service: ApplicationServiceDependency,
 ) -> DataHolder:
@@ -56,7 +57,7 @@ def get_all_applications(
 
 
 @router.get(
-    "/{application_id}",
+    "/byId",
     response_model=None,
     status_code=status.HTTP_200_OK,
 )
@@ -70,7 +71,7 @@ def get_application(
 
 
 @router.delete(
-    "/{application_id}",
+    "/delete",
     response_model=None,
     status_code=status.HTTP_200_OK,
 )
