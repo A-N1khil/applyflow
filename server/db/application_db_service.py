@@ -39,7 +39,7 @@ class ApplicationDBService(BaseDBService[ApplicationModel]):
         self, user_id: UUID, application_id: UUID
     ) -> ApplicationModel | None:
         statement = select(ApplicationModel).where(
-            ApplicationModel.id == application_id,
+            ApplicationModel.application_id == application_id,
             ApplicationModel.user_id == user_id,
         )
         return self.database_session.scalar(statement)

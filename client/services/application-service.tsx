@@ -48,7 +48,7 @@ export class ApplicationService {
     )
 
     return applicationsResponse.data.map((application) => ({
-      id: application.id,
+      id: application.application_id,
       company: companyNames.get(application.company_id) ?? "Unknown company",
       role: application.role,
       status: application.status,

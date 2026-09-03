@@ -40,7 +40,7 @@ class ApplicationService:
         update_fields: dict[str, object] = application_update.model_dump(
             exclude_unset=True,
             exclude_none=True,
-            exclude={"user_id"},
+            exclude={"application_id", "user_id"},
         )
 
         for field_name, field_value in update_fields.items():

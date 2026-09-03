@@ -11,7 +11,7 @@ from server.schemas.application_schema import ApplicationStatus
 class ApplicationModel(Base):
     __tablename__ = "applications"
 
-    id: Mapped[UUID] = mapped_column(
+    application_id: Mapped[UUID] = mapped_column(
         Uuid,
         primary_key=True,
         server_default=text("gen_random_uuid()"),
