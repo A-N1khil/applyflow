@@ -8,6 +8,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import { Skeleton } from "@/components/ui/skeleton"
 import { cn } from "@/lib/utils"
 import type { ReactNode } from "react"
 
@@ -25,6 +26,8 @@ interface DataTableProps<RowData> {
   getRowKey: (row: RowData) => string | number
   emptyMessage?: string
   className?: string
+  isLoading?: boolean
+  skeletonRowCount?: number
 }
 
 export function DataTable<RowData>({
@@ -33,6 +36,8 @@ export function DataTable<RowData>({
   getRowKey,
   emptyMessage = "No results found.",
   className,
+  isLoading = false,
+  skeletonRowCount = 5,
 }: DataTableProps<RowData>) {
   return (
     <div className={cn("px-4 lg:px-6", className)}>
@@ -48,7 +53,17 @@ export function DataTable<RowData>({
             </TableRow>
           </TableHeader>
           <TableBody>
-            {data.length ? (
+            {isLoading ? (
+              Array.from({ length: skeletonRowCount }, (_, rowIndex) => (
+                <TableRow key={`skeleton-row-${rowIndex}`}>
+                  {columns.map((column) => (
+                    <TableCell key={column.id} className={column.cellClassName}>
+                      <Skeleton className="h-5 w-full max-w-36" />
+                    </TableCell>
+                  ))}
+                </TableRow>
+              ))
+            ) : data.length ? (
               data.map((row) => (
                 <TableRow key={getRowKey(row)}>
                   {columns.map((column) => (

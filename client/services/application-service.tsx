@@ -52,7 +52,7 @@ export class ApplicationService {
       company: companyNames.get(application.company_id) ?? "Unknown company",
       role: application.role,
       status: application.status,
-      applied_on: application.created_at,
+      applied_on: application.applied_on,
     }))
   }
 }

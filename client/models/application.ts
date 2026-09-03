@@ -7,6 +7,7 @@ export interface Application {
   url: string | null
   status: string
   created_at: string
+  applied_on: string
 }
 
 export interface ApplicationTableRow {
