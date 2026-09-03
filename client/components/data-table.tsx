@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/table"
 import { Skeleton } from "@/components/ui/skeleton"
 import { cn } from "@/lib/utils"
-import type { ReactNode } from "react"
+import type { KeyboardEvent, ReactNode } from "react"
 
 export interface DataTableColumn<RowData> {
   id: string
@@ -28,6 +28,7 @@ interface DataTableProps<RowData> {
   className?: string
   isLoading?: boolean
   skeletonRowCount?: number
+  onRowClick?: (row: RowData) => void
 }
 
 export function DataTable<RowData>({
@@ -38,7 +39,21 @@ export function DataTable<RowData>({
   className,
   isLoading = false,
   skeletonRowCount = 5,
+  onRowClick,
 }: DataTableProps<RowData>) {
+  function handleRowKeyDown(
+    event: KeyboardEvent<HTMLTableRowElement>,
+    row: RowData
+  ) {
+    if (
+      event.target === event.currentTarget &&
+      (event.key === "Enter" || event.key === " ")
+    ) {
+      event.preventDefault()
+      onRowClick?.(row)
+    }
+  }
+
   return (
     <div className={cn("px-4 lg:px-6", className)}>
       <div className="overflow-hidden rounded-lg border">
@@ -65,7 +80,13 @@ export function DataTable<RowData>({
               ))
             ) : data.length ? (
               data.map((row) => (
-                <TableRow key={getRowKey(row)}>
+                <TableRow
+                  key={getRowKey(row)}
+                  className={cn(onRowClick && "cursor-pointer")}
+                  tabIndex={onRowClick ? 0 : undefined}
+                  onClick={() => onRowClick?.(row)}
+                  onKeyDown={(event) => handleRowKeyDown(event, row)}
+                >
                   {columns.map((column) => (
                     <TableCell key={column.id} className={column.cellClassName}>
                       {column.cell(row)}
