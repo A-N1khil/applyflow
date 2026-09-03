@@ -19,7 +19,7 @@ class ApplicationStatus(StrEnum):
 class Application(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
-    id: UUID
+    application_id: UUID
     user_id: UUID
     company_id: UUID
     role: str
@@ -27,6 +27,7 @@ class Application(BaseModel):
     location: str | None = "Remote"
     status: ApplicationStatus = ApplicationStatus.APPLIED
     created_at: datetime
+    applied_on: datetime
 
 
 class ApplicationCreate(BaseModel):
@@ -39,6 +40,7 @@ class ApplicationCreate(BaseModel):
 
 
 class ApplicationUpdate(BaseModel):
+    application_id: UUID
     user_id: UUID
     company_id: UUID | None = None
     role: str | None = Field(default=None, min_length=1, max_length=255)

@@ -17,10 +17,12 @@ import {
 } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { Toaster, toast } from "@/components/ui/toast"
+import { useUser } from "@/contexts/user-context"
 import type { UserCreate } from "@/models/user"
 import { userService } from "@/services/user-service"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { Check, X } from "lucide-react"
+import { useRouter } from "next/navigation"
 import { useForm, useWatch } from "react-hook-form"
 import { z } from "zod"
 
@@ -51,6 +53,9 @@ export function SignupDetailedForm({
   email,
   ...props
 }: SignupDetailedFormProps) {
+  const router = useRouter()
+  const { setUser } = useUser()
+
   const {
     control,
     register,
@@ -105,7 +110,7 @@ export function SignupDetailedForm({
     }).then(() => userService.createUser(userCreate))
 
     try {
-      await toast.promise(createUserPromise, {
+      toast.promise(createUserPromise, {
         loading: {
           title: "Creating your account..",
           type: "loading",
@@ -125,6 +130,10 @@ export function SignupDetailedForm({
           priority: "high",
         }),
       })
+
+      const createdUser = await createUserPromise
+      setUser(createdUser)
+      router.push("/dashboard")
     } catch {
       // The promise toast displays the server or network error.
     }

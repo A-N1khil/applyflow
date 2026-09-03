@@ -11,7 +11,7 @@ from server.schemas.application_schema import ApplicationStatus
 class ApplicationModel(Base):
     __tablename__ = "applications"
 
-    id: Mapped[UUID] = mapped_column(
+    application_id: Mapped[UUID] = mapped_column(
         Uuid,
         primary_key=True,
         server_default=text("gen_random_uuid()"),
@@ -32,4 +32,7 @@ class ApplicationModel(Base):
     status: Mapped[ApplicationStatus] = mapped_column(
         Enum(ApplicationStatus, name="application_status"),
         server_default=text("'APPLIED'::application_status"),
+    )
+    applied_on: Mapped[datetime] = mapped_column(
+        DateTime, server_default=text("CURRENT_TIMESTAMP")
     )
