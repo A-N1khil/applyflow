@@ -19,3 +19,7 @@ export interface ApplicationTableRow {
   status: string
   applied_on: string
 }
+
+export interface ApplicationDetails extends Application {
+  company: string
+}

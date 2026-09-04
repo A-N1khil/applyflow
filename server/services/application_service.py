@@ -62,6 +62,22 @@ class ApplicationService:
         application = self._get_application_model(user_id, application_id)
         return Application.model_validate(application)
 
+    def get_application_by_index(
+        self,
+        user_id: UUID,
+        application_index: int,
+    ) -> Application:
+        application = self.application_db_service.get_application_by_index(
+            user_id,
+            application_index,
+        )
+        if application is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Application not found",
+            )
+        return Application.model_validate(application)
+
     def get_all_applications(self, user_id: UUID) -> list[Application]:
         applications = self.application_db_service.get_all_applications(user_id)
         return [

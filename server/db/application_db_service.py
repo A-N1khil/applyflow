@@ -44,6 +44,17 @@ class ApplicationDBService(BaseDBService[ApplicationModel]):
         )
         return self.database_session.scalar(statement)
 
+    def get_application_by_index(
+        self,
+        user_id: UUID,
+        application_index: int,
+    ) -> ApplicationModel | None:
+        statement = select(ApplicationModel).where(
+            ApplicationModel.application_index == application_index,
+            ApplicationModel.user_id == user_id,
+        )
+        return self.database_session.scalar(statement)
+
     def get_all_applications(self, user_id: UUID) -> list[ApplicationModel]:
         statement = select(ApplicationModel).where(
             ApplicationModel.user_id == user_id

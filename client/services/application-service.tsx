@@ -1,4 +1,8 @@
-import type { Application, ApplicationTableRow } from "@/models/application"
+import type {
+  Application,
+  ApplicationDetails,
+  ApplicationTableRow,
+} from "@/models/application"
 import { httpService } from "@/services/http-service"
 
 interface Company {
@@ -8,6 +12,53 @@ interface Company {
 }
 
 export class ApplicationService {
+  async getApplicationByIndex(
+    userId: string,
+    applicationIndex: number
+  ): Promise<ApplicationDetails> {
+    const query = new URLSearchParams({
+      user_id: userId,
+      application_index: String(applicationIndex),
+    })
+    const applicationResponse = await httpService.get<Application>(
+      `/applications/byIndex?${query.toString()}`
+    )
+
+    if (
+      applicationResponse.status_code < 200 ||
+      applicationResponse.status_code >= 300
+    ) {
+      throw new Error(
+        applicationResponse.message ?? "Unable to fetch application"
+      )
+    }
+
+    if (applicationResponse.data === null) {
+      throw new Error("The server did not return the application")
+    }
+
+    const application = applicationResponse.data
+    const companyResponse = await httpService.get<Company>(
+      `/companies/${encodeURIComponent(application.company_id)}`
+    )
+
+    if (
+      companyResponse.status_code < 200 ||
+      companyResponse.status_code >= 300
+    ) {
+      throw new Error(companyResponse.message ?? "Unable to fetch company")
+    }
+
+    if (companyResponse.data === null) {
+      throw new Error("The server did not return the company")
+    }
+
+    return {
+      ...application,
+      company: companyResponse.data.name,
+    }
+  }
+
   async getApplications(userId: string): Promise<ApplicationTableRow[]> {
     const [applicationsResponse, companiesResponse] = await Promise.all([
       httpService.get<Application[]>(

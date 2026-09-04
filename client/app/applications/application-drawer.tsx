@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/popover"
 import type { ApplicationTableRow } from "@/models/application"
 import { IconExternalLink } from "@tabler/icons-react"
+import Link from "next/link"
 import { useState } from "react"
 
 interface ApplicationDrawerProps {
@@ -115,10 +116,19 @@ export function ApplicationDrawer({
         <DrawerHeader className="border-b pb-4 text-left">
           <div className="flex items-center justify-between gap-3">
             <DrawerTitle>Quick Edit</DrawerTitle>
-            <IconExternalLink
-              className="h-auto w-5 shrink-0 text-muted-foreground"
-              aria-hidden="true"
-            />
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              aria-label="Open full application"
+              render={
+                <Link href={`/applications/${application.application_index}`} />
+              }
+            >
+              <IconExternalLink
+                className="h-auto w-5 shrink-0"
+                aria-hidden="true"
+              />
+            </Button>
           </div>
           <DrawerDescription>
             #{application.application_index} - {application.role},{" "}
