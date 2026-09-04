@@ -1,5 +1,9 @@
 "use client"
 
+import {
+  ApplicationStatusBadge,
+  ApplicationStatusSelect,
+} from "@/app/applications/application-status-select"
 import { AppSidebar } from "@/components/app-sidebar"
 import { SiteHeader } from "@/components/site-header"
 import { Button } from "@/components/ui/button"
@@ -13,6 +17,20 @@ import { applicationService } from "@/services/application-service"
 import { useParams } from "next/navigation"
 import { useEffect, useState } from "react"
 
+const appliedOnFormatter = new Intl.DateTimeFormat("en-US", {
+  month: "short",
+  day: "numeric",
+  year: "numeric",
+  timeZone: "UTC",
+})
+
+function formatAppliedOn(appliedOn: string): string {
+  const date = new Date(appliedOn)
+  return Number.isNaN(date.getTime())
+    ? appliedOn
+    : appliedOnFormatter.format(date)
+}
+
 export default function ApplicationExpandedPage() {
   const { user } = useUser()
   const params = useParams<{ application_index: string }>()
@@ -22,6 +40,8 @@ export default function ApplicationExpandedPage() {
   const [application, setApplication] = useState<ApplicationDetails | null>(
     null
   )
+  const [initialApplication, setInitialApplication] =
+    useState<ApplicationDetails | null>(null)
   const [applicationError, setApplicationError] = useState<string | null>(null)
   const [note, setNote] = useState("")
 
@@ -37,6 +57,7 @@ export default function ApplicationExpandedPage() {
       .then((fetchedApplication) => {
         if (!ignoreResponse) {
           setApplication(fetchedApplication)
+          setInitialApplication(fetchedApplication)
           setApplicationError(null)
         }
       })
@@ -72,6 +93,16 @@ export default function ApplicationExpandedPage() {
       ? "No user available"
       : applicationError
 
+  const detailsHaveChanged =
+    application !== null &&
+    initialApplication !== null &&
+    (application.company !== initialApplication.company ||
+      application.role !== initialApplication.role ||
+      application.location !== initialApplication.location ||
+      application.url !== initialApplication.url ||
+      application.status !== initialApplication.status ||
+      application.applied_on !== initialApplication.applied_on)
+
   return (
     <SidebarProvider
       style={
@@ -84,7 +115,7 @@ export default function ApplicationExpandedPage() {
       <AppSidebar variant="inset" />
       <SidebarInset>
         <SiteHeader />
-        <div className="grid flex-1 grid-cols-1 lg:grid-cols-5">
+        <div className="grid flex-1 grid-cols-1 lg:grid-cols-4">
           <main className="p-6 lg:col-span-3 lg:p-8">
             {pageMessage ? (
               <p className="text-sm text-destructive">{pageMessage}</p>
@@ -93,51 +124,54 @@ export default function ApplicationExpandedPage() {
                 Loading application...
               </p>
             ) : (
-              <div className="space-y-8">
-                <h1 className="font-heading text-2xl font-semibold tracking-tight">
-                  #{application.role}, {application.company} - #
-                  {application.application_index}
-                </h1>
+              <div className="space-y-6">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <h1 className="font-heading text-2xl font-semibold tracking-tight">
+                    {application.role}, {application.company} - #
+                    {application.application_index}
+                  </h1>
+                  <ApplicationStatusBadge
+                    status={application.status}
+                    size="large"
+                  />
+                </div>
 
-                <FieldGroup className="grid gap-5 sm:grid-cols-2">
-                  <Field>
-                    <FieldLabel htmlFor="expanded-application-index">
-                      Application index
-                    </FieldLabel>
-                    <Input
-                      id="expanded-application-index"
-                      type="number"
-                      value={application.application_index}
-                      onChange={(event) =>
-                        updateApplication(
-                          "application_index",
-                          Number(event.target.value)
-                        )
-                      }
-                    />
-                  </Field>
-                  <Field>
-                    <FieldLabel htmlFor="expanded-user-id">User ID</FieldLabel>
-                    <Input
-                      id="expanded-user-id"
-                      value={application.user_id}
-                      onChange={(event) =>
-                        updateApplication("user_id", event.target.value)
-                      }
-                    />
-                  </Field>
-                  <Field>
-                    <FieldLabel htmlFor="expanded-company-id">
-                      Company ID
-                    </FieldLabel>
-                    <Input
-                      id="expanded-company-id"
-                      value={application.company_id}
-                      onChange={(event) =>
-                        updateApplication("company_id", event.target.value)
-                      }
-                    />
-                  </Field>
+                <Field>
+                  <FieldLabel htmlFor="application-note">Note</FieldLabel>
+                  <Textarea
+                    id="application-note"
+                    value={note}
+                    onChange={(event) => setNote(event.target.value)}
+                    placeholder="Write a note in Markdown..."
+                    className="min-h-28"
+                  />
+                </Field>
+
+                <div className="flex flex-wrap gap-3">
+                  <Button type="button" disabled={!note.trim()}>
+                    Submit Note
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setNote("")}
+                  >
+                    Cancel
+                  </Button>
+                </div>
+              </div>
+            )}
+          </main>
+          {application && !pageMessage && (
+            <aside
+              className="border-t bg-muted/20 p-6 lg:col-span-1 lg:border-t-0 lg:border-l lg:p-8"
+              aria-label="Application details"
+            >
+              <div className="space-y-6">
+                <h2 className="font-heading text-lg font-semibold tracking-tight">
+                  Details
+                </h2>
+                <FieldGroup>
                   <Field>
                     <FieldLabel htmlFor="expanded-company">Company</FieldLabel>
                     <Input
@@ -181,57 +215,36 @@ export default function ApplicationExpandedPage() {
                     />
                   </Field>
                   <Field>
-                    <FieldLabel htmlFor="expanded-status">Status</FieldLabel>
-                    <Input
-                      id="expanded-status"
+                    <FieldLabel>Status</FieldLabel>
+                    <ApplicationStatusSelect
                       value={application.status}
-                      onChange={(event) =>
-                        updateApplication("status", event.target.value)
+                      onValueChange={(status) =>
+                        updateApplication("status", status)
                       }
+                      ariaLabel={`Change status for ${application.company}`}
                     />
                   </Field>
-                  <Field className="sm:col-span-2">
+                  <Field>
                     <FieldLabel htmlFor="expanded-applied-on">
                       Applied on
                     </FieldLabel>
                     <Input
                       id="expanded-applied-on"
-                      value={application.applied_on}
+                      value={formatAppliedOn(application.applied_on)}
                       onChange={(event) =>
                         updateApplication("applied_on", event.target.value)
                       }
                     />
                   </Field>
                 </FieldGroup>
-
-                <Field>
-                  <FieldLabel htmlFor="application-note">Note</FieldLabel>
-                  <Textarea
-                    id="application-note"
-                    value={note}
-                    onChange={(event) => setNote(event.target.value)}
-                    placeholder="Write a note in Markdown..."
-                    className="min-h-40"
-                  />
-                </Field>
-
-                <div className="flex flex-wrap gap-3">
-                  <Button type="button">Submit Note</Button>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => setNote("")}
-                  >
-                    Cancel
+                {detailsHaveChanged && (
+                  <Button className="w-full bg-black text-white hover:bg-black/90 dark:bg-white dark:text-black dark:hover:bg-white/90">
+                    Save changes
                   </Button>
-                </div>
+                )}
               </div>
-            )}
-          </main>
-          <aside
-            className="hidden border-l bg-muted/20 lg:col-span-2 lg:block"
-            aria-label="Application details secondary panel"
-          />
+            </aside>
+          )}
         </div>
       </SidebarInset>
     </SidebarProvider>

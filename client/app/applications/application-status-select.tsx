@@ -76,6 +76,28 @@ interface ApplicationStatusSelectProps {
   ariaLabel: string
 }
 
+interface ApplicationStatusBadgeProps {
+  status: string
+  size?: "default" | "large"
+}
+
+export function ApplicationStatusBadge({
+  status,
+  size = "default",
+}: ApplicationStatusBadgeProps) {
+  return (
+    <Badge
+      variant="outline"
+      className={cn(
+        "rounded-full border-border bg-background px-2.5 py-1 text-foreground dark:bg-input/30",
+        size === "large" && "px-4 py-2 text-sm"
+      )}
+    >
+      <StatusOption status={status} />
+    </Badge>
+  )
+}
+
 export function ApplicationStatusSelect({
   value,
   onValueChange,
@@ -103,12 +125,7 @@ export function ApplicationStatusSelect({
         <SelectGroup>
           {applicationStatuses.map((status) => (
             <SelectItem key={status} value={status}>
-              <Badge
-                variant="outline"
-                className="rounded-full border-border bg-background px-2.5 py-1 text-foreground dark:bg-input/30"
-              >
-                <StatusOption status={status} />
-              </Badge>
+              <ApplicationStatusBadge status={status} />
             </SelectItem>
           ))}
         </SelectGroup>
