@@ -4,6 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from server.core.config import settings
 from server.core.exception_handlers import register_exception_handlers
 from server.routers import (
+    application_note_router,
     application_router,
     company_router,
     user_router,
@@ -21,6 +22,7 @@ app.add_middleware(
 register_exception_handlers(app)
 
 app.include_router(application_router.router)
+app.include_router(application_note_router.router)
 app.include_router(company_router.router)
 app.include_router(user_router.router)
 
