@@ -28,6 +28,7 @@ class Application(BaseModel):
     status: ApplicationStatus = ApplicationStatus.APPLIED
     created_at: datetime
     applied_on: datetime
+    application_index: int
 
 
 class ApplicationCreate(BaseModel):
@@ -47,3 +48,4 @@ class ApplicationUpdate(BaseModel):
     location: str | None = Field(default=None, min_length=1, max_length=255)
     url: str | None = None
     status: ApplicationStatus | None = None
+    application_index: int | None = None
