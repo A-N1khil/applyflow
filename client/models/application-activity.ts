@@ -7,6 +7,7 @@ export interface ApplicationActivity {
   user_id: string
   application_id: string
   change_type: ApplicationChangeType
+  what_change: string | null
   old_value: string | null
   new_value: string | null
 }

@@ -20,6 +20,7 @@ class ApplicationActivity(BaseModel):
     user_id: UUID
     application_id: UUID
     change_type: ApplicationChangeType
+    what_change: str | None = None
     old_value: str | None = None
     new_value: str | None = None
 

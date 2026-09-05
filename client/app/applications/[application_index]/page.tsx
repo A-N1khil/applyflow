@@ -11,7 +11,12 @@ import { Field, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
 import { Textarea } from "@/components/ui/textarea"
+import { Timeline } from "@/components/ui/timeline"
 import { useUser } from "@/contexts/user-context"
+import type { ApplicationActivity } from "@/models/application-activity"
+import type { ApplicationNote } from "@/models/application-note"
+import { applicationActivityService } from "@/services/application-activity-service"
+import { applicationNoteService } from "@/services/application-note-service"
 import type { ApplicationDetails } from "@/models/application"
 import { applicationService } from "@/services/application-service"
 import { useParams } from "next/navigation"
@@ -31,10 +36,53 @@ function formatAppliedOn(appliedOn: string): string {
     : appliedOnFormatter.format(date)
 }
 
+type ApplicationTimelineRecord =
+  | (ApplicationNote & { type: "note" })
+  | (ApplicationActivity & { type: "activity" })
+
+function timelineTimestamp(record: ApplicationTimelineRecord): number {
+  return new Date(
+    record.type === "note" ? record.note_date : record.activity_time
+  ).getTime()
+}
+
+function activityTitle(activity: ApplicationActivity): string {
+  if (activity.change_type === "create") return "Application created"
+  if (activity.change_type === "delete") return "Application deleted"
+  const field = activity.what_change?.replaceAll("_", " ") || "Application"
+  return `${field}: ${activity.old_value ?? "Not set"} → ${activity.new_value ?? "Not set"}`
+}
+
+const timelineDateFormatter = new Intl.DateTimeFormat("en-US", {
+  month: "short",
+  day: "numeric",
+  year: "numeric",
+})
+const timelineTimeFormatter = new Intl.DateTimeFormat("en-US", {
+  hour: "numeric",
+  minute: "2-digit",
+})
+
 export default function ApplicationExpandedPage() {
   const { user } = useUser()
   const params = useParams<{ application_index: string }>()
   const applicationIndex = Number(params.application_index)
+  return (
+    <ApplicationExpandedContent
+      key={`${user?.id ?? ""}:${params.application_index}`}
+      userId={user?.id}
+      applicationIndex={applicationIndex}
+    />
+  )
+}
+
+function ApplicationExpandedContent({
+  userId,
+  applicationIndex,
+}: {
+  userId: string | undefined
+  applicationIndex: number
+}) {
   const hasValidApplicationIndex =
     Number.isInteger(applicationIndex) && applicationIndex > 0
   const [application, setApplication] = useState<ApplicationDetails | null>(
@@ -43,22 +91,57 @@ export default function ApplicationExpandedPage() {
   const [initialApplication, setInitialApplication] =
     useState<ApplicationDetails | null>(null)
   const [applicationError, setApplicationError] = useState<string | null>(null)
+  const [timelineRecords, setTimelineRecords] = useState<
+    ApplicationTimelineRecord[] | null
+  >(null)
+  const [timelineError, setTimelineError] = useState<string | null>(null)
   const [note, setNote] = useState("")
 
   useEffect(() => {
-    if (!user || !hasValidApplicationIndex) {
+    if (!userId || !hasValidApplicationIndex) {
       return
     }
 
     let ignoreResponse = false
 
     applicationService
-      .getApplicationByIndex(user.id, applicationIndex)
-      .then((fetchedApplication) => {
+      .getApplicationByIndex(userId, applicationIndex)
+      .then(async (fetchedApplication) => {
         if (!ignoreResponse) {
           setApplication(fetchedApplication)
           setInitialApplication(fetchedApplication)
           setApplicationError(null)
+        }
+        if (ignoreResponse) return
+
+        try {
+          const [activities, notes] = await Promise.all([
+            applicationActivityService.getAllActivities(
+              userId,
+              fetchedApplication.application_id
+            ),
+            applicationNoteService.getAllNotes(
+              userId,
+              fetchedApplication.application_id
+            ),
+          ])
+          const records: ApplicationTimelineRecord[] = [
+            ...activities.map((activity) => ({
+              ...activity,
+              type: "activity" as const,
+            })),
+            ...notes.map((note) => ({ ...note, type: "note" as const })),
+          ]
+          records.sort((a, b) => timelineTimestamp(a) - timelineTimestamp(b))
+          if (!ignoreResponse) setTimelineRecords(records)
+        } catch (error: unknown) {
+          if (!ignoreResponse) {
+            setTimelineError(
+              error instanceof Error
+                ? error.message
+                : "Unable to fetch timeline"
+            )
+          }
         }
       })
       .catch((error: unknown) => {
@@ -74,7 +157,7 @@ export default function ApplicationExpandedPage() {
     return () => {
       ignoreResponse = true
     }
-  }, [applicationIndex, hasValidApplicationIndex, user])
+  }, [applicationIndex, hasValidApplicationIndex, userId])
 
   function updateApplication<FieldName extends keyof ApplicationDetails>(
     fieldName: FieldName,
@@ -89,7 +172,7 @@ export default function ApplicationExpandedPage() {
 
   const pageMessage = !hasValidApplicationIndex
     ? "Invalid application index"
-    : !user
+    : !userId
       ? "No user available"
       : applicationError
 
@@ -135,6 +218,59 @@ export default function ApplicationExpandedPage() {
                     size="large"
                   />
                 </div>
+
+                <section
+                  aria-labelledby="timeline-heading"
+                  className="space-y-6 border-y py-6"
+                >
+                  <h2
+                    id="timeline-heading"
+                    className="font-heading text-lg font-semibold tracking-tight"
+                  >
+                    Timeline
+                  </h2>
+                  {timelineError ? (
+                    <p role="alert" className="text-sm text-destructive">
+                      {timelineError}
+                    </p>
+                  ) : timelineRecords === null ? (
+                    <p role="status" className="text-sm text-muted-foreground">
+                      Loading timeline...
+                    </p>
+                  ) : timelineRecords.length === 0 ? (
+                    <p className="text-sm text-muted-foreground">
+                      No notes or activity yet.
+                    </p>
+                  ) : (
+                    <Timeline
+                      aria-label="Application timeline"
+                      items={timelineRecords.map((record) => {
+                        const date = new Date(timelineTimestamp(record))
+                        const validDate = !Number.isNaN(date.getTime())
+                        return {
+                          id:
+                            record.type === "note"
+                              ? `note-${record.note_id}`
+                              : `activity-${record.activity_id}`,
+                          title:
+                            record.type === "note" ? (
+                              <span className="font-normal whitespace-pre-wrap">
+                                {record.note_data}
+                              </span>
+                            ) : (
+                              activityTitle(record)
+                            ),
+                          date: validDate
+                            ? timelineDateFormatter.format(date)
+                            : "Unknown date",
+                          time: validDate
+                            ? timelineTimeFormatter.format(date)
+                            : undefined,
+                        }
+                      })}
+                    />
+                  )}
+                </section>
 
                 <Field>
                   <FieldLabel htmlFor="application-note">Note</FieldLabel>

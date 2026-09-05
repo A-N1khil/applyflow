@@ -45,6 +45,7 @@ class ApplicationActivityModel(Base):
         String(255),
         nullable=True,
     )
+    what_change: Mapped[str | None] = mapped_column(String, nullable=True)
     new_value: Mapped[str | None] = mapped_column(
         String(255),
         nullable=True,
