@@ -13,55 +13,23 @@ import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
 import { Textarea } from "@/components/ui/textarea"
 import { Timeline } from "@/components/ui/timeline"
 import { useUser } from "@/contexts/user-context"
-import type { ApplicationActivity } from "@/models/application-activity"
-import type { ApplicationNote } from "@/models/application-note"
+import type { User } from "@/models/user"
 import { applicationActivityService } from "@/services/application-activity-service"
 import { applicationNoteService } from "@/services/application-note-service"
 import type { ApplicationDetails } from "@/models/application"
 import { applicationService } from "@/services/application-service"
 import { useParams } from "next/navigation"
 import { useEffect, useState } from "react"
-
-const appliedOnFormatter = new Intl.DateTimeFormat("en-US", {
-  month: "short",
-  day: "numeric",
-  year: "numeric",
-  timeZone: "UTC",
-})
-
-function formatAppliedOn(appliedOn: string): string {
-  const date = new Date(appliedOn)
-  return Number.isNaN(date.getTime())
-    ? appliedOn
-    : appliedOnFormatter.format(date)
-}
-
-type ApplicationTimelineRecord =
-  | (ApplicationNote & { type: "note" })
-  | (ApplicationActivity & { type: "activity" })
-
-function timelineTimestamp(record: ApplicationTimelineRecord): number {
-  return new Date(
-    record.type === "note" ? record.note_date : record.activity_time
-  ).getTime()
-}
-
-function activityTitle(activity: ApplicationActivity): string {
-  if (activity.change_type === "create") return "Application created"
-  if (activity.change_type === "delete") return "Application deleted"
-  const field = activity.what_change?.replaceAll("_", " ") || "Application"
-  return `${field}: ${activity.old_value ?? "Not set"} → ${activity.new_value ?? "Not set"}`
-}
-
-const timelineDateFormatter = new Intl.DateTimeFormat("en-US", {
-  month: "short",
-  day: "numeric",
-  year: "numeric",
-})
-const timelineTimeFormatter = new Intl.DateTimeFormat("en-US", {
-  hour: "numeric",
-  minute: "2-digit",
-})
+import type { ApplicationTimelineRecord } from "@/app/applications/[application_index]/utils"
+import {
+  timelineTimestamp,
+  activityTitle,
+  timelineDateFormatter,
+  timelineTimeFormatter,
+  formatAppliedOn,
+} from "@/app/applications/[application_index]/utils"
+import { Message, MessageContent } from "@/components/ui/message"
+import { Bubble, BubbleContent } from "@/components/ui/bubble"
 
 export default function ApplicationExpandedPage() {
   const { user } = useUser()
@@ -70,17 +38,17 @@ export default function ApplicationExpandedPage() {
   return (
     <ApplicationExpandedContent
       key={`${user?.id ?? ""}:${params.application_index}`}
-      userId={user?.id}
+      user={user}
       applicationIndex={applicationIndex}
     />
   )
 }
 
 function ApplicationExpandedContent({
-  userId,
+  user,
   applicationIndex,
 }: {
-  userId: string | undefined
+  user: User | null
   applicationIndex: number
 }) {
   const hasValidApplicationIndex =
@@ -98,14 +66,14 @@ function ApplicationExpandedContent({
   const [note, setNote] = useState("")
 
   useEffect(() => {
-    if (!userId || !hasValidApplicationIndex) {
+    if (!user?.id || !hasValidApplicationIndex) {
       return
     }
 
     let ignoreResponse = false
 
     applicationService
-      .getApplicationByIndex(userId, applicationIndex)
+      .getApplicationByIndex(user?.id, applicationIndex)
       .then(async (fetchedApplication) => {
         if (!ignoreResponse) {
           setApplication(fetchedApplication)
@@ -117,11 +85,11 @@ function ApplicationExpandedContent({
         try {
           const [activities, notes] = await Promise.all([
             applicationActivityService.getAllActivities(
-              userId,
+              user?.id,
               fetchedApplication.application_id
             ),
             applicationNoteService.getAllNotes(
-              userId,
+              user?.id,
               fetchedApplication.application_id
             ),
           ])
@@ -157,7 +125,7 @@ function ApplicationExpandedContent({
     return () => {
       ignoreResponse = true
     }
-  }, [applicationIndex, hasValidApplicationIndex, userId])
+  }, [applicationIndex, hasValidApplicationIndex, user?.id])
 
   function updateApplication<FieldName extends keyof ApplicationDetails>(
     fieldName: FieldName,
@@ -172,7 +140,7 @@ function ApplicationExpandedContent({
 
   const pageMessage = !hasValidApplicationIndex
     ? "Invalid application index"
-    : !userId
+    : !user?.id
       ? "No user available"
       : applicationError
 
@@ -254,11 +222,19 @@ function ApplicationExpandedContent({
                               : `activity-${record.activity_id}`,
                           title:
                             record.type === "note" ? (
-                              <span className="font-normal whitespace-pre-wrap">
-                                {record.note_data}
-                              </span>
+                              <Message>
+                                <MessageContent>
+                                  <Bubble>
+                                    <BubbleContent>
+                                      {record.note_data}
+                                    </BubbleContent>
+                                  </Bubble>
+                                </MessageContent>
+                              </Message>
                             ) : (
-                              activityTitle(record)
+                              <span className="font-normal whitespace-pre-wrap">
+                                {activityTitle(user?.first_name, record)}
+                              </span>
                             ),
                           date: validDate
                             ? timelineDateFormatter.format(date)
