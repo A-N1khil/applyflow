@@ -8,7 +8,6 @@ import { Field, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
 import { Textarea } from "@/components/ui/textarea"
-import { Timeline } from "@/components/ui/timeline"
 import { useUser } from "@/contexts/user-context"
 import type { User } from "@/models/user"
 import { applicationActivityService } from "@/services/application-activity-service"
@@ -18,15 +17,8 @@ import { applicationService } from "@/services/application-service"
 import { useParams } from "next/navigation"
 import { useEffect, useState } from "react"
 import type { ApplicationTimelineRecord } from "@/app/applications/[application_index]/utils"
-import {
-  timelineTimestamp,
-  activityTitle,
-  timelineDateFormatter,
-  timelineTimeFormatter,
-  formatAppliedOn,
-} from "@/app/applications/[application_index]/utils"
-import { Message, MessageContent } from "@/components/ui/message"
-import { Bubble, BubbleContent } from "@/components/ui/bubble"
+import { timelineTimestamp, formatAppliedOn } from "@/app/applications/[application_index]/utils"
+import ApplicationTimeline from "./application-timeline"
 
 export default function ApplicationExpandedPage() {
   const { user } = useUser()
@@ -83,7 +75,10 @@ function ApplicationExpandedContent({ user, applicationIndex }: { user: User | n
             })),
           ]
           records.sort((a, b) => timelineTimestamp(a) - timelineTimestamp(b))
-          if (!ignoreResponse) setTimelineRecords(records)
+          if (!ignoreResponse) {
+            setTimelineRecords(records)
+          }
+          console.log(records)
         } catch (error: unknown) {
           if (!ignoreResponse) {
             setTimelineError(error instanceof Error ? error.message : "Unable to fetch timeline")
@@ -168,32 +163,7 @@ function ApplicationExpandedContent({ user, applicationIndex }: { user: User | n
                   ) : timelineRecords.length === 0 ? (
                     <p className="text-sm text-muted-foreground">No notes or activity yet.</p>
                   ) : (
-                    <Timeline
-                      aria-label="Application timeline"
-                      items={timelineRecords.map((record) => {
-                        const date = new Date(timelineTimestamp(record))
-                        const validDate = !Number.isNaN(date.getTime())
-                        return {
-                          id: record.type === "note" ? `note-${record.note_id}` : `activity-${record.activity_id}`,
-                          title:
-                            record.type === "note" ? (
-                              <Message>
-                                <MessageContent>
-                                  <Bubble>
-                                    <BubbleContent>{record.note_data}</BubbleContent>
-                                  </Bubble>
-                                </MessageContent>
-                              </Message>
-                            ) : (
-                              <span className="font-normal whitespace-pre-wrap">
-                                {activityTitle(user?.first_name, record)}
-                              </span>
-                            ),
-                          date: validDate ? timelineDateFormatter.format(date) : "Unknown date",
-                          time: validDate ? timelineTimeFormatter.format(date) : undefined,
-                        }
-                      })}
-                    />
+                    <ApplicationTimeline records={timelineRecords} />
                   )}
                 </section>
 

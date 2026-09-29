@@ -1,6 +1,5 @@
 import type { ApplicationActivity } from "@/models/application-activity"
 import type { ApplicationNote } from "@/models/application-note"
-import type { User } from "@/models/user"
 
 export const appliedOnFormatter = new Intl.DateTimeFormat("en-US", {
   month: "short",
@@ -21,16 +20,15 @@ export function timelineTimestamp(record: ApplicationTimelineRecord): number {
   return new Date(record.type === "note" ? record.note_date : record.activity_time).getTime()
 }
 
-export function activityTitle(name: string | undefined, activity: ApplicationActivity): string {
-  name = name ?? "System"
+export function activityTitle(activity: ApplicationActivity): string {
   if (activity.change_type === "create") {
-    return `${name} created the application`
+    return `You created the application`
   }
   if (activity.change_type === "delete") {
-    return `${name} deleted the application`
+    return `You deleted the application`
   }
   const field: string = activity.what_change?.replaceAll("_", " ") || "Application"
-  return `${name} changed ${field} from ${activity.old_value ?? "Not set"} to ${activity.new_value ?? "Not set"}`
+  return `You changed ${field} from ${activity.old_value ?? "Not set"} to ${activity.new_value ?? "Not set"}`
 }
 
 export const timelineDateFormatter = new Intl.DateTimeFormat("en-US", {

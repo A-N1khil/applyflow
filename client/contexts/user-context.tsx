@@ -1,7 +1,7 @@
 "use client"
 
 import type { User } from "@/models/user"
-import { createContext, useCallback, useContext, useMemo, useState } from "react"
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react"
 
 const USER_STORAGE_KEY = "applyflow.user"
 
@@ -53,7 +53,11 @@ function getStoredUser(): User | null {
 }
 
 export function UserProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUserState] = useState<User | null>(getStoredUser)
+  const [user, setUserState] = useState<User | null>(null)
+
+  useEffect(() => {
+    setUserState(getStoredUser())
+  }, [])
 
   const setUser = useCallback((nextUser: User | null) => {
     setUserState(nextUser)
