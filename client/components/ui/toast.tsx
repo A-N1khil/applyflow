@@ -6,13 +6,7 @@ import { Toast as ToastPrimitive } from "@base-ui/react/toast"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Spinner } from "@/components/ui/spinner"
-import {
-  CircleCheckIcon,
-  InfoIcon,
-  OctagonXIcon,
-  TriangleAlertIcon,
-  XIcon,
-} from "lucide-react"
+import { CircleCheckIcon, InfoIcon, OctagonXIcon, TriangleAlertIcon, XIcon } from "lucide-react"
 
 const toast = ToastPrimitive.createToastManager()
 
@@ -78,19 +72,10 @@ function ToastContent({ className, ...props }: ToastPrimitive.Content.Props) {
 }
 
 function ToastTitle({ className, ...props }: ToastPrimitive.Title.Props) {
-  return (
-    <ToastPrimitive.Title
-      data-slot="toast-title"
-      className={cn("text-sm font-medium", className)}
-      {...props}
-    />
-  )
+  return <ToastPrimitive.Title data-slot="toast-title" className={cn("text-sm font-medium", className)} {...props} />
 }
 
-function ToastDescription({
-  className,
-  ...props
-}: ToastPrimitive.Description.Props) {
+function ToastDescription({ className, ...props }: ToastPrimitive.Description.Props) {
   return (
     <ToastPrimitive.Description
       data-slot="toast-description"
@@ -106,12 +91,7 @@ function ToastAction({
   ...props
 }: ToastPrimitive.Action.Props) {
   return (
-    <ToastPrimitive.Action
-      data-slot="toast-action"
-      render={render}
-      className={cn("shrink-0", className)}
-      {...props}
-    />
+    <ToastPrimitive.Action data-slot="toast-action" render={render} className={cn("shrink-0", className)} {...props} />
   )
 }
 
@@ -165,10 +145,7 @@ function ToastIcon({ type }: { type: string | undefined }) {
   }
 
   return (
-    <span
-      data-slot="toast-icon"
-      className="shrink-0 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4"
-    >
+    <span data-slot="toast-icon" className="shrink-0 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4">
       {icon}
     </span>
   )
@@ -192,11 +169,7 @@ function ToastList() {
   ))
 }
 
-function Toaster({
-  children,
-  toastManager = toast,
-  ...props
-}: ToastPrimitive.Provider.Props) {
+function Toaster({ children, toastManager = toast, ...props }: ToastPrimitive.Provider.Props) {
   return (
     <ToastProvider toastManager={toastManager} {...props}>
       {children}

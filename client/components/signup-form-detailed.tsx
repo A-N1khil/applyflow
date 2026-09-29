@@ -1,26 +1,16 @@
 "use client"
 
 import { Button } from "@/components/ui/button"
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
-import {
-  Field,
-  FieldDescription,
-  FieldError,
-  FieldGroup,
-  FieldLabel,
-} from "@/components/ui/field"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { Toaster, toast } from "@/components/ui/toast"
+import { useUser } from "@/contexts/user-context"
 import type { UserCreate } from "@/models/user"
 import { userService } from "@/services/user-service"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { Check, X } from "lucide-react"
+import { useRouter } from "next/navigation"
 import { useForm, useWatch } from "react-hook-form"
 import { z } from "zod"
 
@@ -47,10 +37,10 @@ type SignupDetailedFormProps = React.ComponentProps<typeof Card> & {
   email: string
 }
 
-export function SignupDetailedForm({
-  email,
-  ...props
-}: SignupDetailedFormProps) {
+export function SignupDetailedForm({ email, ...props }: SignupDetailedFormProps) {
+  const router = useRouter()
+  const { setUser } = useUser()
+
   const {
     control,
     register,
@@ -89,8 +79,7 @@ export function SignupDetailedForm({
     },
   ]
 
-  const passwordsMatch =
-    confirmPassword.length > 0 && password === confirmPassword
+  const passwordsMatch = confirmPassword.length > 0 && password === confirmPassword
 
   async function submitSignupDetails(values: SignupDetailedFormValues) {
     const userCreate: UserCreate = {
@@ -105,7 +94,7 @@ export function SignupDetailedForm({
     }).then(() => userService.createUser(userCreate))
 
     try {
-      await toast.promise(createUserPromise, {
+      toast.promise(createUserPromise, {
         loading: {
           title: "Creating your account..",
           type: "loading",
@@ -118,13 +107,16 @@ export function SignupDetailedForm({
         },
         error: (error: unknown) => ({
           title: "Unable to create account",
-          description:
-            error instanceof Error ? error.message : "Please try again",
+          description: error instanceof Error ? error.message : "Please try again",
           type: "error",
           timeout: 5000,
           priority: "high",
         }),
       })
+
+      const createdUser = await createUserPromise
+      setUser(createdUser)
+      router.push("/dashboard")
     } catch {
       // The promise toast displays the server or network error.
     }
@@ -135,9 +127,7 @@ export function SignupDetailedForm({
       <Card {...props}>
         <CardHeader>
           <CardTitle>Create an account</CardTitle>
-          <CardDescription>
-            Enter your information below to create your account
-          </CardDescription>
+          <CardDescription>Enter your information below to create your account</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit(submitSignupDetails)} noValidate>
@@ -170,17 +160,9 @@ export function SignupDetailedForm({
               </div>
               <Field>
                 <FieldLabel htmlFor="email">Email</FieldLabel>
-                <Input
-                  id="email"
-                  name="email"
-                  type="email"
-                  value={email}
-                  disabled
-                  readOnly
-                />
+                <Input id="email" name="email" type="email" value={email} disabled readOnly />
                 <FieldDescription>
-                  We&apos;ll use this to contact you. We will not share your
-                  email with anyone else.
+                  We&apos;ll use this to contact you. We will not share your email with anyone else.
                 </FieldDescription>
               </Field>
               <Field data-invalid={Boolean(errors.password)}>
@@ -195,12 +177,7 @@ export function SignupDetailedForm({
                 {password.length > 0 && (
                   <ul className="space-y-1 text-sm" aria-label="Password rules">
                     {passwordRules.map((rule) => (
-                      <li
-                        key={rule.label}
-                        className={
-                          rule.passed ? "text-green-600" : "text-destructive"
-                        }
-                      >
+                      <li key={rule.label} className={rule.passed ? "text-green-600" : "text-destructive"}>
                         {rule.passed ? (
                           <Check className="inline size-4" aria-hidden="true" />
                         ) : (
@@ -213,9 +190,7 @@ export function SignupDetailedForm({
                 )}
               </Field>
               <Field data-invalid={Boolean(errors.confirmPassword)}>
-                <FieldLabel htmlFor="confirm-password">
-                  Confirm Password
-                </FieldLabel>
+                <FieldLabel htmlFor="confirm-password">Confirm Password</FieldLabel>
                 <Input
                   id="confirm-password"
                   type="password"
@@ -224,22 +199,13 @@ export function SignupDetailedForm({
                   {...register("confirmPassword")}
                 />
                 {confirmPassword.length > 0 && (
-                  <p
-                    className={
-                      passwordsMatch
-                        ? "text-sm text-green-600"
-                        : "text-sm text-destructive"
-                    }
-                    role="status"
-                  >
+                  <p className={passwordsMatch ? "text-sm text-green-600" : "text-sm text-destructive"} role="status">
                     {passwordsMatch ? (
                       <Check className="inline size-4" aria-hidden="true" />
                     ) : (
                       <X className="inline size-4" aria-hidden="true" />
                     )}{" "}
-                    {passwordsMatch
-                      ? "Passwords match"
-                      : "Passwords do not match"}
+                    {passwordsMatch ? "Passwords match" : "Passwords do not match"}
                   </p>
                 )}
               </Field>
