@@ -2,14 +2,7 @@
 
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
-import {
-  Field,
-  FieldDescription,
-  FieldError,
-  FieldGroup,
-  FieldLabel,
-  FieldSeparator,
-} from "@/components/ui/field"
+import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel, FieldSeparator } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { userService } from "@/services/user-service"
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -24,10 +17,9 @@ const emailFormat = z.email("Enter a valid email address")
 const signupSchema = z.object({
   email: z
     .string()
-    .refine(
-      (email) => email.length < 5 || emailFormat.safeParse(email).success,
-      { message: "Enter a valid email address" }
-    ),
+    .refine((email) => email.length < 5 || emailFormat.safeParse(email).success, {
+      message: "Enter a valid email address",
+    }),
 })
 
 type SignupFormValues = z.infer<typeof signupSchema>
@@ -58,19 +50,12 @@ export function SignupForm({ className, onSignup, ...props }: SignupFormProps) {
   })
 
   const email = useWatch({ control, name: "email" })
-  const hasValidEmailFormat =
-    email.length >= 5 && emailFormat.safeParse(email).success
-  const currentEmailValidation =
-    emailValidation?.email === email ? emailValidation : null
+  const hasValidEmailFormat = email.length >= 5 && emailFormat.safeParse(email).success
+  const currentEmailValidation = emailValidation?.email === email ? emailValidation : null
   const isCheckingEmail = hasValidEmailFormat && currentEmailValidation === null
   const isEmailAvailable = currentEmailValidation?.isAvailable === true
   const emailAvailabilityError = currentEmailValidation?.message ?? null
-  const canCreateAccount =
-    hasValidEmailFormat &&
-    isValid &&
-    isEmailAvailable &&
-    !isCheckingEmail &&
-    !isSubmitting
+  const canCreateAccount = hasValidEmailFormat && isValid && isEmailAvailable && !isCheckingEmail && !isSubmitting
 
   useEffect(() => {
     const requestSequence = ++emailCheckSequence.current
@@ -90,9 +75,7 @@ export function SignupForm({ className, onSignup, ...props }: SignupFormProps) {
         setEmailValidation({
           email,
           isAvailable: !emailExists,
-          message: emailExists
-            ? "An account with this email already exists"
-            : null,
+          message: emailExists ? "An account with this email already exists" : null,
         })
       } catch (error: unknown) {
         if (requestSequence !== emailCheckSequence.current) {
@@ -102,8 +85,7 @@ export function SignupForm({ className, onSignup, ...props }: SignupFormProps) {
         setEmailValidation({
           email,
           isAvailable: false,
-          message:
-            error instanceof Error ? error.message : "Unable to verify email",
+          message: error instanceof Error ? error.message : "Unable to verify email",
         })
       }
     }, 300)
@@ -120,10 +102,7 @@ export function SignupForm({ className, onSignup, ...props }: SignupFormProps) {
       <form onSubmit={handleSubmit(submitSignup)} noValidate>
         <FieldGroup>
           <div className="flex flex-col items-center gap-2 text-center">
-            <a
-              href="#"
-              className="flex flex-col items-center gap-2 font-medium"
-            >
+            <a href="#" className="flex flex-col items-center gap-2 font-medium">
               <div className="flex size-8 items-center justify-center rounded-md">
                 <Form className="size-6" />
               </div>
@@ -144,18 +123,9 @@ export function SignupForm({ className, onSignup, ...props }: SignupFormProps) {
               aria-invalid={Boolean(errors.email || emailAvailabilityError)}
               {...register("email")}
             />
-            {isCheckingEmail && (
-              <FieldDescription>
-                Checking email availability...
-              </FieldDescription>
-            )}
+            {isCheckingEmail && <FieldDescription>Checking email availability...</FieldDescription>}
             <FieldError
-              errors={[
-                errors.email,
-                emailAvailabilityError
-                  ? { message: emailAvailabilityError }
-                  : undefined,
-              ]}
+              errors={[errors.email, emailAvailabilityError ? { message: emailAvailabilityError } : undefined]}
             />
           </Field>
           <Field>
@@ -187,8 +157,7 @@ export function SignupForm({ className, onSignup, ...props }: SignupFormProps) {
         </FieldGroup>
       </form>
       <FieldDescription className="px-6 text-center">
-        By clicking continue, you agree to our <a href="#">Terms of Service</a>{" "}
-        and <a href="#">Privacy Policy</a>.
+        By clicking continue, you agree to our <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>.
       </FieldDescription>
     </div>
   )

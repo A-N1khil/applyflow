@@ -3,34 +3,23 @@ import type { DataHolder } from "@/models/data-holder"
 export class HttpService {
   public readonly baseUrl: string
 
-  constructor(
-    baseUrl: string = process.env.APPLYFLOW_SERVER_URL ??
-      "http://localhost:8000"
-  ) {
+  constructor(baseUrl: string = process.env.APPLYFLOW_SERVER_URL ?? "http://localhost:8000") {
     this.baseUrl = baseUrl.replace(/\/$/, "")
-    console.log(
-      `HttpService initialized with base URL: ${process.env.APPLYFLOW_SERVER_URL}`
-    )
+    console.log(`HttpService initialized with base URL: ${process.env.APPLYFLOW_SERVER_URL}`)
   }
 
   get<T>(path: string): Promise<DataHolder<T>> {
     return this.request<T>(path, { method: "GET" })
   }
 
-  post<TResponse, TRequest = unknown>(
-    path: string,
-    body: TRequest
-  ): Promise<DataHolder<TResponse>> {
+  post<TResponse, TRequest = unknown>(path: string, body: TRequest): Promise<DataHolder<TResponse>> {
     return this.request<TResponse>(path, {
       method: "POST",
       body: JSON.stringify(body),
     })
   }
 
-  patch<TResponse, TRequest = unknown>(
-    path: string,
-    body: TRequest
-  ): Promise<DataHolder<TResponse>> {
+  patch<TResponse, TRequest = unknown>(path: string, body: TRequest): Promise<DataHolder<TResponse>> {
     return this.request<TResponse>(path, {
       method: "PATCH",
       body: JSON.stringify(body),
@@ -41,10 +30,7 @@ export class HttpService {
     return this.request<T>(path, { method: "DELETE" })
   }
 
-  private async request<T>(
-    path: string,
-    options: RequestInit
-  ): Promise<DataHolder<T>> {
+  private async request<T>(path: string, options: RequestInit): Promise<DataHolder<T>> {
     let response: Response
 
     try {
@@ -57,8 +43,7 @@ export class HttpService {
         },
       })
     } catch (error: unknown) {
-      const message =
-        error instanceof Error ? error.message : "Unable to reach the server"
+      const message = error instanceof Error ? error.message : "Unable to reach the server"
       throw new Error(`Unable to reach the server: ${message}`, {
         cause: error,
       })

@@ -1,93 +1,33 @@
 "use client"
 
+import { ApplicationDrawer } from "@/app/applications/application-drawer"
+import { ApplicationStatusSelect } from "@/app/applications/application-status-select"
 import { DataTable, type DataTableColumn } from "@/components/data-table"
-import { Badge } from "@/components/ui/badge"
-import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
 import { useUser } from "@/contexts/user-context"
-import { cn } from "@/lib/utils"
 import type { ApplicationTableRow } from "@/models/application"
 import { applicationService } from "@/services/application-service"
 import { useEffect, useState } from "react"
-import {
-  IconBrandZoom,
-  IconBubbleText,
-  IconCircleCheckFilled,
-  IconCircleXFilled,
-  IconListNumbers,
-  IconMailSpark,
-  IconProgress,
-  IconVideoPlus,
-  type TablerIcon,
-} from "@tabler/icons-react"
-
-const statusIconMap: Record<string, TablerIcon> = {
-  APPLIED: IconProgress,
-  RECRUITER_CONTACT: IconBubbleText,
-  ASSESSMENT: IconListNumbers,
-  INTERVIEW: IconBrandZoom,
-  FINAL_INTERVIEW: IconVideoPlus,
-  OFFER: IconMailSpark,
-  REJECTED: IconCircleCheckFilled,
-  WITHDRAWN: IconCircleXFilled,
-}
-
-const statusColorMap: Record<string, string> = {
-  APPLIED: "!text-yellow-600 dark:!text-yellow-400",
-  RECRUITER_CONTACT: "!text-blue-600 dark:!text-blue-400",
-  ASSESSMENT: "!text-indigo-600 dark:!text-indigo-400",
-  INTERVIEW: "!text-orange-600 dark:!text-orange-400",
-  FINAL_INTERVIEW: "!text-orange-600 dark:!text-orange-400",
-  OFFER: "!text-green-600 dark:!text-green-400",
-  REJECTED: "!text-red-600 dark:!text-red-400",
-  WITHDRAWN: "!text-gray-600 dark:!text-gray-400",
-}
-
-const applicationStatuses = Object.keys(statusIconMap)
 
 const dateFormatter = new Intl.DateTimeFormat("en-US", {
   dateStyle: "medium",
 })
-
-function formatStatus(status: string): string {
-  return status
-    .toLowerCase()
-    .split("_")
-    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(" ")
-}
 
 function formatAppliedOn(appliedOn: string): string {
   const date = new Date(appliedOn)
   return Number.isNaN(date.getTime()) ? appliedOn : dateFormatter.format(date)
 }
 
-function StatusOption({ status }: { status: string }) {
-  const StatusIcon = statusIconMap[status] ?? IconProgress
-  const iconColor =
-    statusColorMap[status] ?? "!text-gray-600 dark:!text-gray-400"
-
-  return (
-    <span className="flex items-center gap-1.5 text-foreground">
-      <StatusIcon
-        className={cn("h-auto w-[1em] shrink-0", iconColor)}
-        aria-hidden="true"
-      />
-      {formatStatus(status)}
-    </span>
-  )
-}
-
 function getColumns(
   onStatusChange: (applicationId: string, status: string) => void
 ): DataTableColumn<ApplicationTableRow>[] {
   return [
+    {
+      id: "application-index",
+      header: null,
+      cell: (application) => application.application_index,
+      headerClassName: "w-12",
+      cellClassName: "w-12 text-muted-foreground",
+    },
     {
       id: "company",
       header: "Company",
@@ -102,42 +42,15 @@ function getColumns(
     {
       id: "status",
       header: "Status",
-      cell: (application) => {
-        return (
-          <Select
+      cell: (application) => (
+        <div onClick={(event) => event.stopPropagation()}>
+          <ApplicationStatusSelect
             value={application.status}
-            onValueChange={(status) => {
-              if (status) {
-                onStatusChange(application.id, status)
-              }
-            }}
-          >
-            <SelectTrigger
-              size="sm"
-              className="h-auto rounded-full border-input bg-background px-2.5 py-1 text-foreground dark:bg-input/30"
-              aria-label={`Change status for ${application.company}`}
-            >
-              <SelectValue>
-                <StatusOption status={application.status} />
-              </SelectValue>
-            </SelectTrigger>
-            <SelectContent align="start" className="min-w-52">
-              <SelectGroup>
-                {applicationStatuses.map((status) => (
-                  <SelectItem key={status} value={status}>
-                    <Badge
-                      variant="outline"
-                      className="rounded-full border-border bg-background px-2.5 py-1 text-foreground dark:bg-input/30"
-                    >
-                      <StatusOption status={status} />
-                    </Badge>
-                  </SelectItem>
-                ))}
-              </SelectGroup>
-            </SelectContent>
-          </Select>
-        )
-      },
+            onValueChange={(status) => onStatusChange(application.id, status)}
+            ariaLabel={`Change status for ${application.company}`}
+          />
+        </div>
+      ),
     },
     {
       id: "applied-on",
@@ -152,10 +65,10 @@ export default function ApplicationsTable() {
   const { user } = useUser()
 
   // Applications state
-  const [applications, setApplications] = useState<
-    ApplicationTableRow[] | null
-  >(null)
+  const [applications, setApplications] = useState<ApplicationTableRow[] | null>(null)
   const [applicationError, setApplicationError] = useState<string | null>(null)
+  const [selectedApplication, setSelectedApplication] = useState<ApplicationTableRow | null>(null)
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false)
 
   useEffect(() => {
     if (!user) {
@@ -171,17 +84,18 @@ export default function ApplicationsTable() {
     Promise.all([applicationService.getApplications(user.id), skeletonDelay])
       .then(([rows]) => {
         if (!ignoreResponse) {
-          setApplications(rows)
+          setApplications(
+            [...rows].sort(
+              (firstApplication, secondApplication) =>
+                firstApplication.application_index - secondApplication.application_index
+            )
+          )
           setApplicationError(null)
         }
       })
       .catch((error: unknown) => {
         if (!ignoreResponse) {
-          setApplicationError(
-            error instanceof Error
-              ? error.message
-              : "Unable to fetch applications"
-          )
+          setApplicationError(error instanceof Error ? error.message : "Unable to fetch applications")
           setApplications([])
         }
       })
@@ -195,9 +109,7 @@ export default function ApplicationsTable() {
     setApplications(
       (currentApplications) =>
         currentApplications?.map((application) =>
-          application.id === applicationId
-            ? { ...application, status }
-            : application
+          application.id === applicationId ? { ...application, status } : application
         ) ?? null
     )
 
@@ -206,26 +118,30 @@ export default function ApplicationsTable() {
 
   const columns = getColumns(handleStatusChange)
 
+  function handleRowClick(application: ApplicationTableRow) {
+    setSelectedApplication(application)
+    setIsDrawerOpen(true)
+  }
+
   return (
     <div className="space-y-4">
-      {applicationError && (
-        <p className="px-4 text-sm text-destructive lg:px-6">
-          {applicationError}
-        </p>
-      )}
+      {applicationError && <p className="px-4 text-sm text-destructive lg:px-6">{applicationError}</p>}
       <DataTable
         columns={columns}
         data={applications ?? []}
         getRowKey={(application) => application.id}
         isLoading={Boolean(user) && applications === null}
         skeletonRowCount={5}
+        onRowClick={handleRowClick}
         emptyMessage={
-          !user
-            ? "No user available."
-            : applications === null
-              ? "Loading applications..."
-              : "No applications found."
+          !user ? "No user available." : applications === null ? "Loading applications..." : "No applications found."
         }
+      />
+      <ApplicationDrawer
+        key={selectedApplication?.id ?? "no-application"}
+        application={selectedApplication}
+        open={isDrawerOpen}
+        onOpenChange={setIsDrawerOpen}
       />
     </div>
   )

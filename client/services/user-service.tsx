@@ -3,10 +3,7 @@ import { httpService } from "@/services/http-service"
 
 export class UserService {
   async login(userLogin: UserLoginRequest): Promise<User> {
-    const response = await httpService.post<User, UserLoginRequest>(
-      "/users/login",
-      userLogin
-    )
+    const response = await httpService.post<User, UserLoginRequest>("/users/login", userLogin)
 
     if (response.status_code < 200 || response.status_code >= 300) {
       throw new Error(response.message ?? "Unable to log in")
@@ -20,10 +17,7 @@ export class UserService {
   }
 
   async createUser(userCreate: UserCreate): Promise<User> {
-    const response = await httpService.post<User, UserCreate>(
-      "/users/add",
-      userCreate
-    )
+    const response = await httpService.post<User, UserCreate>("/users/add", userCreate)
 
     if (response.status_code < 200 || response.status_code >= 300) {
       throw new Error(response.message ?? "Unable to create account")
@@ -37,9 +31,7 @@ export class UserService {
   }
 
   async emailExists(email: string): Promise<boolean> {
-    const response = await httpService.get<boolean>(
-      `/users/email-exists?email=${encodeURIComponent(email)}`
-    )
+    const response = await httpService.get<boolean>(`/users/email-exists?email=${encodeURIComponent(email)}`)
 
     if (response.status_code < 200 || response.status_code >= 300) {
       throw new Error(response.message ?? "Unable to verify email")

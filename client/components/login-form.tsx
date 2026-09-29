@@ -2,21 +2,8 @@
 
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
-import {
-  Field,
-  FieldDescription,
-  FieldError,
-  FieldGroup,
-  FieldLabel,
-  FieldSeparator,
-} from "@/components/ui/field"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel, FieldSeparator } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { Toaster, toast } from "@/components/ui/toast"
 import { useUser } from "@/contexts/user-context"
@@ -80,8 +67,7 @@ export function LoginForm({ className, ...props }: LoginFormProps) {
         },
         error: (error: unknown) => ({
           title: "Unable to log in",
-          description:
-            error instanceof Error ? error.message : "Please try again",
+          description: error instanceof Error ? error.message : "Please try again",
           type: "error",
           timeout: 5000,
           priority: "high",
@@ -109,9 +95,7 @@ export function LoginForm({ className, ...props }: LoginFormProps) {
   }
 
   // TODO: Restore `!isValid || isSubmitting` directly when removing the bypass.
-  const isLoginDisabled = LOGIN_BYPASS_ENABLED
-    ? false
-    : !isValid || isSubmitting
+  const isLoginDisabled = LOGIN_BYPASS_ENABLED ? false : !isValid || isSubmitting
 
   return (
     <Toaster>
@@ -119,9 +103,7 @@ export function LoginForm({ className, ...props }: LoginFormProps) {
         <Card>
           <CardHeader className="text-center">
             <CardTitle className="text-xl">Welcome back</CardTitle>
-            <CardDescription>
-              Login with your Apple or Google account
-            </CardDescription>
+            <CardDescription>Login with your Apple or Google account</CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={submitLoginForm} noValidate>
@@ -164,10 +146,7 @@ export function LoginForm({ className, ...props }: LoginFormProps) {
                 <Field data-invalid={Boolean(errors.password)}>
                   <div className="flex items-center">
                     <FieldLabel htmlFor="password">Password</FieldLabel>
-                    <a
-                      href="#"
-                      className="ml-auto text-sm underline-offset-4 hover:underline"
-                    >
+                    <a href="#" className="ml-auto text-sm underline-offset-4 hover:underline">
                       Forgot your password?
                     </a>
                   </div>
@@ -185,8 +164,7 @@ export function LoginForm({ className, ...props }: LoginFormProps) {
                     Login
                   </Button>
                   <FieldDescription className="text-center">
-                    Don&apos;t have an account?{" "}
-                    <Link href="/signup">Sign up</Link>
+                    Don&apos;t have an account? <Link href="/signup">Sign up</Link>
                   </FieldDescription>
                 </Field>
               </FieldGroup>
@@ -194,8 +172,7 @@ export function LoginForm({ className, ...props }: LoginFormProps) {
           </CardContent>
         </Card>
         <FieldDescription className="px-6 text-center">
-          By clicking continue, you agree to our{" "}
-          <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>.
+          By clicking continue, you agree to our <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>.
         </FieldDescription>
       </div>
     </Toaster>

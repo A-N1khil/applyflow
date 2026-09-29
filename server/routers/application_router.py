@@ -55,6 +55,23 @@ def get_all_applications(
 
 
 @router.get(
+    "/byIndex",
+    response_model=None,
+    status_code=status.HTTP_200_OK,
+)
+def get_application_by_index(
+    user_id: Annotated[UUID, Query()],
+    application_index: Annotated[int, Query(ge=1)],
+    application_service: ApplicationServiceDependency,
+) -> DataHolder:
+    application = application_service.get_application_by_index(
+        user_id,
+        application_index,
+    )
+    return success_response(application)
+
+
+@router.get(
     "/byId",
     response_model=None,
     status_code=status.HTTP_200_OK,
